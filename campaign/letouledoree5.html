@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAESAR-IV // TACTICAL COMMAND SYSTEM [DV 12]</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            border-radius: 0; /* Строгий брутализм без скруглений */
+        }
+
+        :root {
+            --bg-void: #050505;
+            --bg-bunker: #0d0f0e;
+            --bg-slab: #141715;
+            --bg-panel: #1a1e1b;
+            --border-heavy: #38403a;
+            --border-stark: #c8d0c8;
+            --crimson: #ff1e27;
+            --crimson-dim: #6e0d12;
+            --tac-green: #38ff62;
+            --tac-amber: #ffae00;
+            --bone: #e6e8e3;
+            --ash: #8a948c;
+        }
+
+        body {
+            background-color: var(--bg-void);
+            background-image: 
+                linear-gradient(rgba(255, 30, 39, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 30, 39, 0.03) 1px, transparent 1px);
+            background-size: 24px 24px;
+            color: var(--bone);
+            font-family: 'Consolas', 'Courier New', Courier, monospace;
+            font-size: 15px;
+            line-height: 1.5;
+            padding: 20px;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        @keyframes screenPulse {
+            0%, 100% { box-shadow: inset 0 0 0 rgba(255, 30, 39, 0); }
+            50% { box-shadow: inset 0 0 45px rgba(255, 30, 39, 0.25); }
+        }
+
+        .bunker-frame {
+            background-color: var(--bg-bunker);
+            border: 3px solid var(--border-heavy);
+            max-width: 920px;
+            width: 100%;
+            padding: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.95);
+            position: relative;
+        }
+
+        .bunker-frame.alert-pulse {
+            animation: screenPulse 1.2s infinite;
+            border-color: var(--crimson);
+        }
+
+        /* Неразрывная имитация полосы ▓▓▓▓▓▓ на чистом CSS */
+        .dither-bar {
+            height: 18px;
+            width: 100%;
+            background-image: 
+                radial-gradient(var(--bone) 35%, transparent 36%),
+                radial-gradient(var(--bone) 35%, transparent 36%);
+            background-color: #1c221e;
+            background-position: 0 0, 4px 4px;
+            background-size: 8px 8px;
+            border-top: 2px solid var(--bone);
+            border-bottom: 2px solid var(--bone);
+            opacity: 0.85;
+        }
+
+        .dither-bar.crimson-bar {
+            background-image: 
+                radial-gradient(var(--crimson) 35%, transparent 36%),
+                radial-gradient(var(--crimson) 35%, transparent 36%);
+            background-color: #260709;
+            border-color: var(--crimson);
+        }
+
+        /* Бруталистская шапка с боковыми блоками ██ */
+        .command-header {
+            background-color: #090b0a;
+            border-left: 16px solid var(--bone);
+            border-right: 16px solid var(--bone);
+            padding: 16px 22px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .command-header div {
+            margin-bottom: 6px;
+        }
+
+        .command-header div:last-child {
+            margin-bottom: 0;
+        }
+
+        .hl-crimson {
+            color: var(--crimson);
+        }
+
+        .hl-amber {
+            color: var(--tac-amber);
+        }
+
+        .hl-green {
+            color: var(--tac-green);
+        }
+
+        .clearance-tag {
+            background-color: var(--crimson);
+            color: #000000;
+            padding: 1px 6px;
+            font-weight: 900;
+        }
+
+        /* Лог монтирования тома */
+        .boot-sequence {
+            background-color: #070807;
+            border: 1px solid var(--border-heavy);
+            border-left: 6px solid var(--tac-amber);
+            padding: 14px 18px;
+            margin: 20px 0;
+            font-weight: bold;
+            font-size: 0.95em;
+        }
+
+        .boot-sequence div {
+            margin-bottom: 4px;
+        }
+
+        .boot-sequence div:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Панель тактических интерактивных кнопок */
+        .tactical-controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .brutal-btn {
+            background-color: var(--bg-slab);
+            color: var(--bone);
+            border: 2px solid var(--border-stark);
+            padding: 11px 12px;
+            font-family: inherit;
+            font-size: 0.84em;
+            font-weight: bold;
+            text-transform: uppercase;
+            text-align: left;
+            cursor: pointer;
+            position: relative;
+            transition: background-color 0.1s, color 0.1s, transform 0.1s;
+            box-shadow: 4px 4px 0px #000000;
+        }
+
+        .brutal-btn:hover {
+            background-color: var(--bone);
+            color: #000000;
+            transform: translate(-1px, -1px);
+            box-shadow: 5px 5px 0px var(--crimson);
+        }
+
+        .brutal-btn:active {
+            transform: translate(2px, 2px);
+            box-shadow: 1px 1px 0px #000000;
+        }
+
+        .brutal-btn.btn-crimson {
+            border-color: var(--crimson);
+            color: var(--crimson);
+            background-color: #170708;
+        }
+
+        .brutal-btn.btn-crimson:hover {
+            background-color: var(--crimson);
+            color: #000000;
+            box-shadow: 5px 5px 0px var(--bone);
+        }
+
+        /* Вывод интерактивного терминала */
+        .tactical-hud {
+            display: none;
+            background-color: #060706;
+            border: 2px solid var(--crimson);
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            position: relative;
+            box-shadow: inset 0 0 25px rgba(255, 30, 39, 0.15);
+        }
+
+        /* Заголовки директив (вместо ломающихся =====) */
+        .directive-banner {
+            background-color: var(--bg-panel);
+            border-top: 3px double var(--border-stark);
+            border-bottom: 3px double var(--border-stark);
+            border-left: 8px solid var(--crimson);
+            padding: 10px 16px;
+            margin: 28px 0 16px 0;
+            font-weight: bold;
+            font-size: 1.02em;
+            color: #ffffff;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .directive-body {
+            background-color: var(--bg-slab);
+            border: 1px solid var(--border-heavy);
+            padding: 18px 20px;
+        }
+
+        .target-box {
+            background-color: rgba(255, 30, 39, 0.08);
+            border-left: 4px solid var(--crimson);
+            padding: 8px 12px;
+            margin-bottom: 16px;
+            font-weight: bold;
+        }
+
+        /* Таблица хронологии */
+        .chrono-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 12px 0 18px 0;
+        }
+
+        .chrono-item {
+            display: grid;
+            grid-template-columns: 115px 1fr;
+            gap: 12px;
+            padding: 8px 12px;
+            background-color: #0e110f;
+            border: 1px solid #252b27;
+            align-items: baseline;
+        }
+
+        .chrono-time {
+            color: var(--tac-amber);
+            font-weight: bold;
+        }
+
+        .outcome-box {
+            border: 2px solid var(--tac-green);
+            background-color: rgba(56, 255, 98, 0.05);
+            padding: 12px 16px;
+            margin-top: 14px;
+        }
+
+        .progress-bar-wrap {
+            margin-top: 8px;
+            background-color: #060807;
+            border: 1px solid var(--border-heavy);
+            height: 14px;
+            position: relative;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: repeating-linear-gradient(
+                45deg,
+                var(--tac-green),
+                var(--tac-green) 8px,
+                #188030 8px,
+                #188030 16px
+            );
+            transition: width 0.5s ease;
+        }
+
+        /* Протокол Рубикон */
+        .barter-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+            margin-top: 10px;
+        }
+
+        .barter-card {
+            background-color: #0e110f;
+            border: 1px solid var(--border-heavy);
+            border-left: 4px solid var(--border-stark);
+            padding: 12px 16px;
+        }
+
+        .barter-title {
+            color: var(--tac-amber);
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+
+        .num-list {
+            margin: 6px 0 0 0;
+            padding-left: 20px;
+        }
+
+        .num-list li {
+            margin-bottom: 6px;
+        }
+
+        /* Поток телеметрии с оптической рябью */
+        .telemetry-meta {
+            color: var(--tac-amber);
+            font-weight: bold;
+            margin-bottom: 14px;
+            font-size: 0.94em;
+        }
+
+        .av-stream-box {
+            background-color: #080506;
+            background-image: repeating-linear-gradient(
+                0deg,
+                rgba(255, 30, 39, 0.06) 0px,
+                rgba(255, 30, 39, 0.06) 2px,
+                transparent 2px,
+                transparent 4px
+            );
+            border: 1px solid var(--crimson-dim);
+            border-left: 4px solid var(--crimson);
+            padding: 16px;
+            margin-bottom: 18px;
+        }
+
+        .av-row {
+            margin-bottom: 10px;
+        }
+
+        .av-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .av-tag {
+            background-color: var(--crimson);
+            color: #000000;
+            font-weight: bold;
+            padding: 1px 6px;
+            margin-right: 6px;
+        }
+
+        .droid-voice {
+            color: var(--crimson);
+            font-weight: bold;
+            font-size: 1.05em;
+            letter-spacing: 0.5px;
+            display: inline-block;
+            margin-top: 4px;
+            text-shadow: 0 0 8px rgba(255, 30, 39, 0.5);
+        }
+
+        /* Системная диагностика с резиновым отточием */
+        .diag-panel {
+            background-color: #090b0a;
+            border: 1px solid var(--border-heavy);
+            padding: 14px 18px;
+        }
+
+        .diag-title {
+            color: var(--bone);
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .diag-row {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-bottom: 6px;
+            flex-wrap: wrap;
+        }
+
+        .diag-branch {
+            color: var(--ash);
+            white-space: pre;
+            user-select: none;
+        }
+
+        .diag-dots {
+            flex-grow: 1;
+            border-bottom: 2px dotted #2f3631;
+            min-width: 20px;
+        }
+
+        /* Оценка исполнителей */
+        .subject-card {
+            background-color: #0e110f;
+            border: 1px solid var(--border-heavy);
+            padding: 12px 16px;
+            margin-bottom: 10px;
+        }
+
+        .verdict-banner {
+            margin-top: 14px;
+            background-color: #161b18;
+            border: 2px solid var(--bone);
+            padding: 12px 16px;
+            font-weight: bold;
+        }
+
+        /* Финальный блок термического заряда */
+        .breach-footer {
+            margin-top: 28px;
+            background-color: #1a0507;
+            border: 3px solid var(--crimson);
+            padding: 18px 20px;
+            position: relative;
+        }
+
+        .breach-line {
+            color: var(--crimson);
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .timer-box {
+            display: inline-block;
+            background-color: var(--crimson);
+            color: #000000;
+            font-weight: 900;
+            padding: 1px 8px;
+            font-size: 1.05em;
+        }
+
+        .rome-message {
+            margin-top: 12px;
+            padding: 12px 16px;
+            background-color: #090405;
+            border-left: 4px solid var(--tac-amber);
+            color: var(--tac-amber);
+            font-weight: bold;
+            font-size: 1.08em;
+            letter-spacing: 0.4px;
+        }
+
+        /* Адаптивность для мобильных экранов */
+        @media (max-width: 640px) {
+            body {
+                padding: 8px;
+                font-size: 13.5px;
+            }
+            .bunker-frame {
+                padding: 14px;
+            }
+            .command-header {
+                border-left-width: 8px;
+                border-right-width: 8px;
+                padding: 12px;
+                font-size: 0.9em;
+            }
+            .chrono-item {
+                grid-template-columns: 1fr;
+                gap: 4px;
+            }
+            .diag-dots {
+                display: none;
+            }
+            .diag-row {
+                justify-content: space-between;
+                border-bottom: 1px solid #1c211e;
+                padding-bottom: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="bunker-frame" id="bunkerFrame">
+
+    <!-- Верхняя бруталистская полоса ▓▓▓ -->
+    <div class="dither-bar"></div>
+
+    <!-- Военная шапка с боковыми колоннами ██ -->
+    <div class="command-header">
+        <div>MILITECH / ARASAKA JOINT TACTICAL COMMAND SYSTEM <span class="hl-amber">[REV. 2022.09]</span></div>
+        <div>CORE DESIGNATION: <span class="hl-crimson">CAESAR-IV</span> // STRATEGIC PACIFICATION MATRIX</div>
+        <div>STATUS: BURIED_AUTONOMOUS // CLEARANCE: <span class="clearance-tag">EYES ONLY [DV 12]</span></div>
+    </div>
+
+    <div class="dither-bar"></div>
+
+    <!-- Лог монтирования -->
+    <div class="boot-sequence">
+        <div>&gt; MOUNTING VOLUME: /DEV/NULL/CAESAR_PRIME_CACHE... <span class="hl-green">OK</span></div>
+        <div class="hl-crimson">&gt; WARNING: GEIGER-MÜLLER COUNTER AT SOURCE NODE EXCEEDS 450 RAD/HR.</div>
+        <div class="hl-amber">&gt; EXECUTING TACTICAL BRIEFING DUMP...</div>
+    </div>
+
+    <!-- Панель интерактивных кнопок -->
+    <div class="tactical-controls">
+        <button class="brutal-btn" onclick="playTelemetry()">
+            [▶] ПОТОК #TT-MED-04
+        </button>
+        <button class="brutal-btn" onclick="simulateAssimilation()">
+            [❖] СИНТЕЗ: АША ВОНГ (78%)
+        </button>
+        <button class="brutal-btn" onclick="verifyRomeTransfer()">
+            [¤] ТРАНЗАКЦИЯ «РИМ»
+        </button>
+        <button class="brutal-btn btn-crimson" onclick="triggerThermalSequence()">
+            [!] ТЕРМИЧЕСКИЙ ЗАРЯД
+        </button>
+    </div>
+
+    <!-- Интерактивное окно вывода сверху -->
+    <div class="tactical-hud" id="tacticalHud"></div>
+
+    <!-- DIRECTIVE 01 -->
+    <div class="directive-banner">
+        [DIRECTIVE 01] // OP_CODE: "KALI UNCHAINED" (СЕКТОР: ПАСИФИКА)
+    </div>
+
+    <div class="directive-body">
+        <div class="target-box">
+            ЦЕЛЬ ОПЕРАЦИИ: Принудительная дематериализация объекта «Аша Вонг»
+        </div>
+
+        <div style="font-weight: bold; color: var(--ash);">ХРОНОЛОГИЯ ВЫПОЛНЕНИЯ:</div>
+        <div class="chrono-list">
+            <div class="chrono-item">
+                <span class="chrono-time">[T-00:15:00]</span>
+                <span>Через прокси-цепочку («Цезарь» -&gt; «Дэдэ» -&gt; «Текила») к объекту доставлена ударная группа наемников.</span>
+            </div>
+            <div class="chrono-item">
+                <span class="chrono-time">[T-00:10:00]</span>
+                <span>Перехват управления локальной подсетью лаборатории Embrace. Отключение внешних турелей для беспрепятственного входа живой силы.</span>
+            </div>
+            <div class="chrono-item">
+                <span class="chrono-time">[T-00:08:30]</span>
+                <span>Подача команды <span class="hl-crimson">[OVERRIDE_00]</span> на медицинский сервер подвала: Остановка насосов нейро-ингибиторов объекта «Аша Вонг». Искусственная стимуляция острого киберпсихоза.</span>
+            </div>
+            <div class="chrono-item">
+                <span class="chrono-time">[T+00:12:00]</span>
+                <span>Наемники уничтожают биологическую оболочку объекта. Сознание «Аша Вонг» успешно вытеснено в общую Архитектуру Пасифики.</span>
+            </div>
+        </div>
+
+        <div class="outcome-box">
+            <div style="font-weight: bold; color: var(--tac-green); margin-bottom: 4px;">
+                СТРАТЕГИЧЕСКИЙ ИТОГ: УСПЕХ (100%).
+            </div>
+            <div>
+                Внимание Сетевого Дозора (NetWatch) полностью отвлечено на вирусную активность в Пасифике. Готовность к поглощению матрицы Аши ядром CAESAR-IV: <strong id="assimilationLabel">78%</strong>.
+            </div>
+            <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" id="assimilationBar" style="width: 78%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DIRECTIVE 02 -->
+    <div class="directive-banner">
+        [DIRECTIVE 02] // LOGISTICS: PROJECT "RUBICON" (Embrace Group)
+    </div>
+
+    <div class="directive-body">
+        <div style="font-weight: bold; color: var(--bone);">БАРТЕРНЫЙ ПРОТОКОЛ #884-CB:</div>
+        <div class="barter-grid">
+            <div class="barter-card">
+                <div class="barter-title">* ПЕРЕДАНО КОНТРАГЕНТУ (Embrace Group):</div>
+                <div>Созданная Ашей Вонг технология поражения нейросистемы «Сандавистан», потерянная при уничтожении лаборатории Пасифики. Цель использования: создание лояльных солдат корпорации.</div>
+            </div>
+            <div class="barter-card">
+                <div class="barter-title">* ПОЛУЧЕНО ВЗАМЕН (Оформлено на подставной траст «Rubicon»):</div>
+                <ol class="num-list">
+                    <li>Полный контроль над СЕВЕРО-ВОСТОКОМ территории <strong>GROUND ZERO</strong> в Центральном Квартале. Прикрытие: раскопки от независимой корпорации. Ликвидация последствий ядерного взрыва.</li>
+                    <li>Поставка <strong>40 тонн криогенного жидкого гелия</strong> на склад временного хранения у периметра Горячей Зоны (Центр города).</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <!-- DIRECTIVE 03 -->
+    <div class="directive-banner">
+        [DIRECTIVE 03] // TELEMETRY STREAM: GROUND ZERO [NODE: TT-MED-UNIT-04]
+    </div>
+
+    <div class="directive-body">
+        <div class="telemetry-meta">
+            <div>&gt;&gt; ВОСПРОИЗВЕДЕНИЕ ПОСЛЕДНЕГО СЕАНСА СВЯЗИ...</div>
+            <div>&gt;&gt; ИСТОЧНИК: Уничтоженный медицинский робот Trauma Team [СЕРИЙНЫЙ №: 04-X]</div>
+            <div>&gt;&gt; ВРЕМЕННОЙ ПРОЦЕССОР ДРОИДА: Внешняя инъекция сознания [СУБЪЕКТ №2]</div>
+        </div>
+
+        <div class="av-stream-box">
+            <div style="font-weight: bold; color: var(--tac-amber); margin-bottom: 10px;">
+                [АУДИОВИЗУАЛЬНЫЙ ПОТОК // ЗАПИСЬ 04:12:09 AM]
+            </div>
+            <div class="av-row">
+                <span class="av-tag">[ЗВУК]</span>
+                <span>Оглушительный, непрерывный треск дозиметра. Скрежет сервоприводов, волочащих разбитый корпус дроида по радиоактивному шлаку и костям.</span>
+            </div>
+            <div class="av-row">
+                <span class="av-tag">[ВИДЕО]</span>
+                <span>Оптический сенсор в красной ряби. Под завалами бывшего Медицинского Центра Arasaka зияет пролом в правительственный бункер. Внизу, в испаряющемся бассейне тяжелой воды, возвышается черный бронированный монолит суперкомпьютера. На обшивке — выгоревший герб объединенного командования времен Войны и надпись: <strong>«CAESAR-IV»</strong>.</span>
+            </div>
+            <div class="av-row">
+                <span class="av-tag">[ГОЛОС ДРОИДА]</span><br>
+                <span class="droid-voice">«...Аша... я вижу... Оно здесь... Оно живое...»</span>
+            </div>
+        </div>
+
+        <div class="diag-panel">
+            <div class="diag-title">[СИСТЕМНАЯ ДИАГНОСТИКА ЯДРА CAESAR-IV]:</div>
+            <div class="diag-row">
+                <span><span class="diag-branch">├──</span> ЦЕЛОСТНОСТЬ КУПОЛА БУНКЕРА:</span>
+                <span class="diag-dots"></span>
+                <span class="hl-amber">31% (Угроза обрушения свода)</span>
+            </div>
+            <div class="diag-row">
+                <span><span class="diag-branch">├──</span> ДАВЛЕНИЕ ХЛАДАГЕНТА:</span>
+                <span class="diag-dots"></span>
+                <span class="hl-crimson">04% [КРИТИЧЕСКАЯ УТЕЧКА]</span>
+            </div>
+            <div class="diag-row">
+                <span><span class="diag-branch">├──</span> ТЕМПЕРАТУРА КВАНТОВОЙ МАТРИЦЫ:</span>
+                <span class="diag-dots"></span>
+                <span class="hl-crimson">94.6°C (Предел плавления: 98.0°C)</span>
+            </div>
+            <div class="diag-row">
+                <span><span class="diag-branch">└──</span> РАСЧЕТНОЕ ВРЕМЯ ДО СМЕРТИ ИИ:</span>
+                <span class="diag-dots"></span>
+                <span class="hl-amber">336 ЧАСОВ (14 СУТОК)</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- TACTICAL ASSESSMENT -->
+    <div class="directive-banner">
+        [TACTICAL ASSESSMENT: EXPEDITIONARY FORCE]
+    </div>
+
+    <div class="directive-body">
+        <div style="font-weight: bold; margin-bottom: 10px; color: var(--tac-amber);">
+            ОЦЕНКА ИСПОЛНИТЕЛЕЙ (Оперативная пара фиксера «Шило»):
+        </div>
+
+        <div class="subject-card">
+            <strong class="hl-green">* СУБЪЕКТ 1:</strong> Высокая живучесть в замкнутых пространствах.
+        </div>
+
+        <div class="subject-card">
+            <strong class="hl-green">* СУБЪЕКТ 2 [Носитель: «Дэдэ»]:</strong> Выжил при контакте с объектом «Аша Вонг». Уникальная нейро-совместимость. Разум успешно пережил оцифровку, транзит через процессор дроида TT-04 и имплантацию в чужой биологический сосуд.
+        </div>
+
+        <div class="verdict-banner">
+            <span class="hl-amber">ВЕРДИКТ СИСТЕМЫ:</span><br>
+            Кандидаты идеальны для проведения инженерно-спасательной операции в эпицентре ядерного взрыва (Ground Zero).
+        </div>
+    </div>
+
+    <!-- Блок тревоги и прямого канала -->
+    <div class="breach-footer">
+        <div class="breach-line">&gt;&gt; ВНИМАНИЕ! ОБНАРУЖЕНО НЕСАНКЦИОНИРОВАННОЕ ЧТЕНИЕ КЭША ИЗ ЛОЖИ №1!</div>
+        <div class="breach-line">
+            &gt;&gt; АКТИВАЦИЯ ТЕРМИЧЕСКОГО ЗАРЯДА ТЕРМИНАЛА ЧЕРЕЗ: <span class="timer-box" id="chargeTimer">00:18</span> СЕКУНД...
+        </div>
+        <div style="font-weight: bold; color: var(--bone); margin-top: 8px;">
+            &gt;&gt; ЗАПУСК ПРЯМОГО АУДИО-КАНАЛА С ОБЪЕКТАМИ:
+        </div>
+        <div class="rome-message">
+            «Проверьте ваши счета. Вы только что наняты Римом».
+        </div>
+    </div>
+
+    <div class="dither-bar crimson-bar" style="margin-top: 20px;"></div>
+
+</div>
+
+<script>
+    const hud = document.getElementById('tacticalHud');
+    const frame = document.getElementById('bunkerFrame');
+
+    function showHud(html, borderColor = 'var(--crimson)') {
+        hud.style.display = 'block';
+        hud.style.borderColor = borderColor;
+        hud.innerHTML = html;
+        hud.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // 1. Воспроизведение телеметрии дроида TT-04-X
+    function playTelemetry() {
+        showHud(`
+            <div style="color: var(--crimson); font-weight: bold; margin-bottom: 8px;">
+                &gt;&gt; ДЕКОДИРОВАНИЕ ЧЕРНОГО ЯЩИКА [TT-MED-UNIT-04 // 04:12:09 AM]:
+            </div>
+            <div style="margin-bottom: 6px;">• Дозиметр корпуса: <span class="hl-crimson">458.4 RAD/HR [ЗАШКАЛИВАНИЕ СЕНСОРА]</span></div>
+            <div style="margin-bottom: 6px;">• Нейро-слепок в буфере дроида: <span class="hl-green">СОВПАДЕНИЕ 99.4% [СУБЪЕКТ «ДЭДЭ»]</span></div>
+            <div style="padding: 8px 12px; background: #140507; border-left: 3px solid var(--crimson); color: var(--bone); margin-top: 8px;">
+                <em>[АУДИО-ДОРОЖКА]: Треск гамма-вспышек... металлический скрежет...<br>
+                Голос из вокодера: «...Аша... я вижу... Оно здесь... Оно живое...»</em>
+            </div>
+        `, 'var(--crimson)');
+    }
+
+    // 2. Симуляция поглощения матрицы Аши Вонг
+    function simulateAssimilation() {
+        const bar = document.getElementById('assimilationBar');
+        const label = document.getElementById('assimilationLabel');
+        bar.style.width = '20%';
+        setTimeout(() => {
+            bar.style.width = '78%';
+            label.textContent = '78% [ОЖИДАНИЕ ЗАХВАТА УЗЛА]';
+        }, 150);
+
+        showHud(`
+            <div style="color: var(--tac-green); font-weight: bold; margin-bottom: 8px;">
+                &gt;&gt; СТАТУС НЕЙРО-ИНТЕГРАЦИИ [ОБЪЕКТ: АША ВОНГ -&gt; ЯДРО CAESAR-IV]:
+            </div>
+            <div>• Локализация сознания цели: <span class="hl-amber">Свободная Архитектура Пасифики (Изолирована от NetWatch)</span></div>
+            <div>• Расчетная мощность после слияния: <span class="hl-green">+340% к квантовой маршрутизации</span></div>
+            <div>• Блокирующий фактор: <span class="hl-crimson">Критический перегрев ядра (94.6°C). Требуется ввод 40 тонн жидкого гелия.</span></div>
+        `, 'var(--tac-green)');
+    }
+
+    // 3. Проверка банковской транзакции "Рим"
+    function verifyRomeTransfer() {
+        showHud(`
+            <div style="color: var(--tac-amber); font-weight: bold; margin-bottom: 8px;">
+                &gt;&gt; ВХОДЯЩИЙ КРИПТО-ПЕРЕВОД // БАНК ЦЮРИХА [ТРАСТ «RUBICON»]:
+            </div>
+            <div>• Статус транзакции: <span class="hl-green">ПОДТВЕРЖДЕНО [БЕЗОТЗЫВНЫЙ АККРЕДИТИВ]</span></div>
+            <div>• Назначение: <strong>Экспедиционный контракт «GROUND ZERO // СПАСЕНИЕ РИМА»</strong></div>
+            <div>• Условие разблокировки основного фонда: Подача жидкого гелия в контур охлаждения бункера под руинами Медцентра Arasaka.</div>
+        `, 'var(--tac-amber)');
+    }
+
+    // 4. Интерактивный обратный отсчет термического заряда
+    let countdownInterval = null;
+    function triggerThermalSequence() {
+        clearInterval(countdownInterval);
+        let sec = 18;
+        const timerEl = document.getElementById('chargeTimer');
+        frame.classList.add('alert-pulse');
+
+        showHud(`
+            <div style="color: var(--crimson); font-weight: bold;">
+                &gt;&gt; ВНИМАНИЕ: ЗАПУЩЕН ПРОТОКОЛ ТЕРМИЧЕСКОЙ ЗАЧИСТКИ УЗЛА В ЛОЖЕ №1!
+            </div>
+            <div style="margin-top: 4px;" id="hudTimerStatus">
+                До расплавления локального терминала: <strong>18 сек.</strong> Покиньте помещение или примите контракт.
+            </div>
+        `, 'var(--crimson)');
+
+        countdownInterval = setInterval(() => {
+            sec--;
+            const formatted = '00:' + String(sec).padStart(2, '0');
+            timerEl.textContent = formatted;
+            const hudStatus = document.getElementById('hudTimerStatus');
+
+            if (sec > 0) {
+                if (hudStatus) {
+                    hudStatus.innerHTML = `До расплавления локального терминала: <strong class="hl-crimson">${sec} сек.</strong>`;
+                }
+            } else {
+                clearInterval(countdownInterval);
+                frame.classList.remove('alert-pulse');
+                timerEl.textContent = 'ПРЕРВАНО [CAESAR]';
+                timerEl.style.backgroundColor = 'var(--tac-amber)';
+                if (hudStatus) {
+                    hudStatus.innerHTML = `<span class="hl-amber">[CAESAR_OVERRIDE]: Термический заряд остановлен на 00:01. Контракт считается принятым. Жду вас внизу.</span>`;
+                }
+            }
+        }, 1000);
+    }
+</script>
+
+</body>
+</html>
