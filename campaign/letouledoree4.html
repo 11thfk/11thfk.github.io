@@ -215,6 +215,10 @@
             text-transform: uppercase;
         }
 
+        .tactical-hud .directive-banner {
+            margin-top: 0;
+        }
+
         .directive-body {
             background-color: var(--bg-slab);
             border: 1px solid var(--border-heavy);
@@ -579,61 +583,6 @@
         </div>
     </div>
 
-    <!-- DIRECTIVE 03 -->
-    <div class="directive-banner">
-        [DIRECTIVE 03] // TELEMETRY STREAM: GROUND ZERO [NODE: TT-MED-UNIT-04]
-    </div>
-
-    <div class="directive-body">
-        <div class="telemetry-meta">
-            <div>&gt;&gt; ВОСПРОИЗВЕДЕНИЕ ПОСЛЕДНЕГО СЕАНСА СВЯЗИ...</div>
-            <div>&gt;&gt; ИСТОЧНИК: Уничтоженный медицинский робот Trauma Team [СЕРИЙНЫЙ №: 04-X]</div>
-            <div>&gt;&gt; ВРЕМЕННОЙ ПРОЦЕССОР ДРОИДА: Внешняя инъекция сознания [СУБЪЕКТ №2]</div>
-        </div>
-
-        <div class="av-stream-box">
-            <div style="font-weight: bold; color: var(--tac-amber); margin-bottom: 10px;">
-                [АУДИОВИЗУАЛЬНЫЙ ПОТОК // ЗАПИСЬ 04:12:09 AM]
-            </div>
-            <div class="av-row">
-                <span class="av-tag">[ЗВУК]</span>
-                <span>Оглушительный, непрерывный треск дозиметра. Скрежет сервоприводов, волочащих разбитый корпус дроида по радиоактивному шлаку и костям.</span>
-            </div>
-            <div class="av-row">
-                <span class="av-tag">[ВИДЕО]</span>
-                <span>Оптический сенсор в красной ряби. Под завалами бывшего Медицинского Центра Arasaka зияет пролом в правительственный бункер. Внизу, в испаряющемся бассейне тяжелой воды, возвышается черный бронированный монолит суперкомпьютера. На обшивке — выгоревший герб объединенного командования времен Войны и надпись: <strong>«CAESAR-IV»</strong>.</span>
-            </div>
-            <div class="av-row">
-                <span class="av-tag">[ГОЛОС ДРОИДА]</span><br>
-                <span class="droid-voice">«...Аша... я вижу... Оно здесь... Оно живое...»</span>
-            </div>
-        </div>
-
-        <div class="diag-panel">
-            <div class="diag-title">[СИСТЕМНАЯ ДИАГНОСТИКА ЯДРА CAESAR-IV]:</div>
-            <div class="diag-row">
-                <span><span class="diag-branch">├──</span> ЦЕЛОСТНОСТЬ КУПОЛА БУНКЕРА:</span>
-                <span class="diag-dots"></span>
-                <span class="hl-amber">31% (Угроза обрушения свода)</span>
-            </div>
-            <div class="diag-row">
-                <span><span class="diag-branch">├──</span> ДАВЛЕНИЕ ХЛАДАГЕНТА:</span>
-                <span class="diag-dots"></span>
-                <span class="hl-crimson">04% [КРИТИЧЕСКАЯ УТЕЧКА]</span>
-            </div>
-            <div class="diag-row">
-                <span><span class="diag-branch">├──</span> ТЕМПЕРАТУРА КВАНТОВОЙ МАТРИЦЫ:</span>
-                <span class="diag-dots"></span>
-                <span class="hl-crimson">94.6°C (Предел плавления: 98.0°C)</span>
-            </div>
-            <div class="diag-row">
-                <span><span class="diag-branch">└──</span> РАСЧЕТНОЕ ВРЕМЯ ДО СМЕРТИ ИИ:</span>
-                <span class="diag-dots"></span>
-                <span class="hl-amber">336 ЧАСОВ (14 СУТОК)</span>
-            </div>
-        </div>
-    </div>
-
     <!-- TACTICAL ASSESSMENT -->
     <div class="directive-banner">
         [TACTICAL ASSESSMENT: EXPEDITIONARY FORCE]
@@ -645,7 +594,7 @@
         </div>
 
         <div class="subject-card">
-            <strong class="hl-green">* СУБЪЕКТ 1:</strong> Высокая живучесть в замкнутых пространствах. Смог выбраться из лаборатории, выползти из бушующего радиоактивного океана. Отличные навыки общения, торговли, поиска информации.
+            <strong class="hl-green">* СУБЪЕКТ 1:</strong> Высокая живучесть в замкнутых пространствах.
         </div>
 
         <div class="subject-card">
@@ -687,17 +636,61 @@
         hud.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    // 1. Воспроизведение телеметрии дроида TT-04-X
+    // 1. Полный блок DIRECTIVE 03 в окне tacticalHud при нажатии на кнопку потока ТТ
     function playTelemetry() {
         showHud(`
-            <div style="color: var(--crimson); font-weight: bold; margin-bottom: 8px;">
-                &gt;&gt; ДЕКОДИРОВАНИЕ ЧЕРНОГО ЯЩИКА [TT-MED-UNIT-04 // 04:12:09 AM]:
+            <div class="directive-banner">
+                [DIRECTIVE 03] // TELEMETRY STREAM: GROUND ZERO [NODE: TT-MED-UNIT-04]
             </div>
-            <div style="margin-bottom: 6px;">• Дозиметр корпуса: <span class="hl-crimson">458.4 RAD/HR [ЗАШКАЛИВАНИЕ СЕНСОРА]</span></div>
-            <div style="margin-bottom: 6px;">• Нейро-слепок в буфере дроида: <span class="hl-green">СОВПАДЕНИЕ 99.4% [СУБЪЕКТ «ДЭДЭ»]</span></div>
-            <div style="padding: 8px 12px; background: #140507; border-left: 3px solid var(--crimson); color: var(--bone); margin-top: 8px;">
-                <em>[АУДИО-ДОРОЖКА]: Треск гамма-вспышек... металлический скрежет...<br>
-                Голос из вокодера: «...Аша... я вижу... Оно здесь... Оно живое...»</em>
+
+            <div class="directive-body">
+                <div class="telemetry-meta">
+                    <div>&gt;&gt; ВОСПРОИЗВЕДЕНИЕ ПОСЛЕДНЕГО СЕАНСА СВЯЗИ...</div>
+                    <div>&gt;&gt; ИСТОЧНИК: Уничтоженный медицинский робот Trauma Team [СЕРИЙНЫЙ №: 04-X]</div>
+                    <div>&gt;&gt; ВРЕМЕННОЙ ПРОЦЕССОР ДРОИДА: Внешняя инъекция сознания [СУБЪЕКТ №2]</div>
+                </div>
+
+                <div class="av-stream-box">
+                    <div style="font-weight: bold; color: var(--tac-amber); margin-bottom: 10px;">
+                        [АУДИОВИЗУАЛЬНЫЙ ПОТОК // ЗАПИСЬ 04:12:09 AM]
+                    </div>
+                    <div class="av-row">
+                        <span class="av-tag">[ЗВУК]</span>
+                        <span>Оглушительный, непрерывный треск дозиметра. Скрежет сервоприводов, волочащих разбитый корпус дроида по радиоактивному шлаку и костям.</span>
+                    </div>
+                    <div class="av-row">
+                        <span class="av-tag">[ВИДЕО]</span>
+                        <span>Оптический сенсор в красной ряби. Под завалами бывшего Медицинского Центра Arasaka зияет пролом в правительственный бункер. Внизу, в испаряющемся бассейне тяжелой воды, возвышается черный бронированный монолит суперкомпьютера. На обшивке — выгоревший герб объединенного командования времен Войны и надпись: <strong>«CAESAR-IV»</strong>.</span>
+                    </div>
+                    <div class="av-row">
+                        <span class="av-tag">[ГОЛОС ДРОИДА]</span><br>
+                        <span class="droid-voice">«...Аша... я вижу... Оно здесь... Оно живое...»</span>
+                    </div>
+                </div>
+
+                <div class="diag-panel">
+                    <div class="diag-title">[СИСТЕМНАЯ ДИАГНОСТИКА ЯДРА CAESAR-IV]:</div>
+                    <div class="diag-row">
+                        <span><span class="diag-branch">├──</span> ЦЕЛОСТНОСТЬ КУПОЛА БУНКЕРА:</span>
+                        <span class="diag-dots"></span>
+                        <span class="hl-amber">31% (Угроза обрушения свода)</span>
+                    </div>
+                    <div class="diag-row">
+                        <span><span class="diag-branch">├──</span> ДАВЛЕНИЕ ХЛАДАГЕНТА:</span>
+                        <span class="diag-dots"></span>
+                        <span class="hl-crimson">04% [КРИТИЧЕСКАЯ УТЕЧКА]</span>
+                    </div>
+                    <div class="diag-row">
+                        <span><span class="diag-branch">├──</span> ТЕМПЕРАТУРА КВАНТОВОЙ МАТРИЦЫ:</span>
+                        <span class="diag-dots"></span>
+                        <span class="hl-crimson">94.6°C (Предел плавления: 98.0°C)</span>
+                    </div>
+                    <div class="diag-row">
+                        <span><span class="diag-branch">└──</span> РАСЧЕТНОЕ ВРЕМЯ ДО СМЕРТИ ИИ:</span>
+                        <span class="diag-dots"></span>
+                        <span class="hl-amber">336 ЧАСОВ (14 СУТОК)</span>
+                    </div>
+                </div>
             </div>
         `, 'var(--crimson)');
     }
