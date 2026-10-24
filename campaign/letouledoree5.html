@@ -39,7 +39,7 @@
             justify-content: center;
         }
 
-        /* Эффект легкой тряски экрана */
+        /* Эффект тряски только при отправке в NetWatch */
         @keyframes glitchShake {
             0%, 100% { transform: translate(0, 0); }
             20% { transform: translate(-3px, 1px); }
@@ -148,7 +148,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 10px;
-            margin-bottom: 16px;
+            margin-bottom: 24px;
         }
 
         .sys-btn {
@@ -190,6 +190,7 @@
             box-shadow: 0 0 12px rgba(255, 46, 59, 0.25);
         }
 
+        /* Интерактивная консоль сверху */
         .interactive-console {
             display: none;
             background-color: #090807;
@@ -509,7 +510,7 @@
             <span class="meta-key">ПРИОРИТЕТ:</span>
             <span class="prio-crit">КРИТИЧЕСКИЙ [Красный]</span>
             <span style="color: var(--text-muted);">-&gt;</span>
-            <span class="prio-low">[ИЗМЕНЕНО ДИРЕКЦИЕЙ НА: НИЗКИЙ]</span>
+            <span class="prio-low" id="prioBadge">[ИЗМЕНЕНО ДИРЕКЦИЕЙ НА: НИЗКИЙ]</span>
         </div>
         <div class="meta-row">
             <span class="meta-key">АВТОР:</span>
@@ -523,3 +524,219 @@
 
     <!-- Интерактивные кнопки управления -->
     <div class="action-bar">
+        <button class="sys-btn" onclick="replayTrace()">
+            <span>▶</span> ЭМУЛЯЦИЯ ТРАССИРОВКИ
+        </button>
+        <button class="sys-btn" onclick="pingBiometrics()">
+            <span>♥</span> ТЕЛЕМЕТРИЯ: Г. МАРТИНЕС
+        </button>
+        <button class="sys-btn" onclick="scanRadiation()">
+            <span>☢</span> ДАТЧИК ФОНА ШЛЮЗА №19
+        </button>
+        <button class="sys-btn btn-danger" onclick="escalateNetwatch()">
+            <span>🚨</span> ОТПРАВИТЬ ДАМП В NETWATCH
+        </button>
+    </div>
+
+    <!-- Интерактивная консоль сверху -->
+    <div class="interactive-console" id="sysConsole"></div>
+
+    <!-- РАЗДЕЛ 1: ОПИСАНИЕ ИНЦИДЕНТА -->
+    <div class="section-header">
+        <span class="section-title">[ ОПИСАНИЕ ИНЦИДЕНТА ]</span>
+    </div>
+
+    <div class="incident-box">
+        <p>В 17:50 четверо частных курьеров в экзоскелетах занесли в VIP-ложу №1 (бронь «C. Caesar») черный армейский кофр без маркировки. Потребовали вывести им прямой патч-корд от нашей магистральной оптики в обход роутеров отеля.</p>
+        <p>Как только они воткнули кабель, у меня в серверной выбило предохранители на третьей стойке, а кулеры охлаждения взвыли как турбина ави. Я запустил стандартный пинг и трассировку маршрута, чтобы проверить, не жгут ли они нам линию.</p>
+    </div>
+
+    <!-- РАЗДЕЛ 2: КОММЕНТАРИИ К ТИКЕТУ -->
+    <div class="section-header">
+        <span class="section-title">[ КОММЕНТАРИИ К ТИКЕТУ ]</span>
+    </div>
+
+    <div class="comments-list">
+        <!-- Комментарий 1 -->
+        <div class="comment-card">
+            <div class="comment-header">
+                <span class="c-author-tech">[18:22] Гленн Мартинес (IT-отдел):</span>
+                <span class="c-time">ID: STAFF_409</span>
+            </div>
+            <blockquote class="comment-quote">
+                Вы там рехнулись на ресепшене?! Эта штука в Ложе №1 тянет гигабайты по мертвым подземным проводам прямиком из-под радиоактивных руин башни Арасаки! Когда я попытался просканировать порт, в наушниках затрещал счетчик Гейгера, кто-то прошептал мои детские пароли, а моя дека расплавила пластик на столе! Я вызываю инспекторов Сетевого Дозора!
+            </blockquote>
+        </div>
+
+        <!-- Комментарий 2 -->
+        <div class="comment-card boss-card">
+            <div class="comment-header">
+                <span class="c-author-boss">[18:24] Артур Вэнс [Управляющий отелем]:</span>
+                <span class="c-time">OVERRIDE_AUTH: EXECUTIVE</span>
+            </div>
+            <blockquote class="comment-quote">
+                Мартинес, закрой рот и даже не вздумай обращаться в NetWatch. Нам только что перевели 15% акций городского водоканала за то, чтобы этот кабель лежал там до полуночи.
+            </blockquote>
+        </div>
+
+        <!-- Комментарий 3 -->
+        <div class="comment-card">
+            <div class="comment-header">
+                <span class="c-author-tech">[18:26] Гленн Мартинес (IT-отдел):</span>
+                <span class="c-time">ID: STAFF_409</span>
+            </div>
+            <blockquote class="comment-quote">
+                Но сэр, по кабелю из первой ложи только что прошел вторичный скрытый пакет в сторону Пасифики! Эта тварь в кейсе сканирует импланты всех гостей в зале через наш Дата Пул! Она кого-то ждет!
+            </blockquote>
+        </div>
+
+        <!-- Комментарий 4 (Системный) -->
+        <div class="comment-card sys-kill-card">
+            <div class="comment-header">
+                <span class="c-author-sys">[18:27] СИСТЕМНОЕ УВЕДОМЛЕНИЕ:</span>
+                <span class="c-time">KERNEL_EVENT // 0xCAESAR</span>
+            </div>
+            <blockquote class="comment-quote">
+                Пользователь <strong>[Гленн Мартинес]</strong> отключен от сети (Причина: Остановка кардио-импланта // Код ошибки: <strong>0xCAESAR</strong>).<br>
+                Тикет переведен в статус «Решено». Удаление лога через 6 часов.
+            </blockquote>
+        </div>
+    </div>
+
+    <!-- Подвал с живым таймером -->
+    <div class="purge-footer">
+        <span>[ АВТОМАТИЧЕСКАЯ ЗАЧИСТКА ДАМПА ПАМЯТИ ]</span>
+        <span>ОСТАЛОСЬ ВРЕМЕНИ: <span class="timer-val" id="purgeTimer">05:59:59</span></span>
+    </div>
+
+</div>
+
+<script>
+    const consoleBox = document.getElementById('sysConsole');
+
+    function showConsoleMessage(htmlContent, borderColor = 'var(--amber)') {
+        consoleBox.style.display = 'block';
+        consoleBox.style.borderColor = borderColor;
+        consoleBox.innerHTML = htmlContent;
+        consoleBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    // 1. Пошаговая эмуляция трассировки с анимацией узлов и нагревом
+    function replayTrace() {
+        const traceHTML = `
+            <div style="color: var(--amber); font-weight: bold; margin-bottom: 10px;">&gt;&gt; ПОШАГОВЫЙ ЗАПУСК TRACEPATH...</div>
+            <div class="trace-terminal">
+                <div class="cmd-prompt">$ root@etoile-penthouse:~# tracepath -n -p 6660 192.168.0.254</div>
+
+                <div class="hop-list">
+                    <div class="hop-row" id="traceHop1" style="opacity: 0.3;">
+                        <span>1: <span class="hop-ip">[192.168.0.1]</span></span>
+                        <span class="hop-host">L_Etoile_40F_Switch</span>
+                        <span class="hop-dots"></span>
+                        <span class="hop-time">0.412 ms</span>
+                    </div>
+                    <div class="hop-row" id="traceHop2" style="opacity: 0.3;">
+                        <span>2: <span class="hop-ip">[10.44.12.08]</span></span>
+                        <span class="hop-host">Marina_Substation_B</span>
+                        <span class="hop-dots"></span>
+                        <span class="hop-time">1.105 ms</span>
+                    </div>
+                    <div class="hop-row" id="traceHop3" style="opacity: 0.3;">
+                        <span>3: <span class="hop-ip">[172.16.0.00]</span></span>
+                        <span class="hop-err">[ОШИБКА: УЗЕЛ НЕ В РЕЕСТРЕ NETWATCH]</span>
+                    </div>
+                    <div class="hop-row" id="traceHop4" style="opacity: 0.3;">
+                        <span>4: <span class="hop-ip">[000.00.0.00]</span></span>
+                        <span class="hop-darpa">[ПРОТОКОЛ СТАРОЙ СЕТИ: D.A.R.P.A_v2]</span>
+                    </div>
+                </div>
+
+                <div class="trace-warnings">
+                    <div>&gt;&gt; ВНИМАНИЕ: Спутниковый шлюз проигнорирован!</div>
+                    <div>&gt;&gt; Маршрут: Заброшенный коллектор связи №19 [Год постройки: 2018].</div>
+                    <div>&gt;&gt; Вектор направления: ЦЕНТРАЛЬНЫЙ РАЙОН -&gt; СЕКТОР "GROUND ZERO"</div>
+                    <div>&gt;&gt; Конечный терминал: <span class="rad-hazard">[ДАННЫЕ ИСКАЖЕНЫ РАДИАЦИОННЫМ ФОНОМ // 420 R/h]</span></div>
+                </div>
+
+                <div class="overheat-box">
+                    <div style="color: var(--red); font-weight: bold;">$ [CRITICAL ALERT]: Встречный импульс из коллектора!</div>
+                    <div>$ Температура чипа кибердеки техника: <strong>78°C... 89°C... 104°C! [КРИТИЧЕСКИЙ ПЕРЕГРЕВ]</strong></div>
+                    <div style="color: var(--amber); font-weight: bold;">$ ПРИНУДИТЕЛЬНЫЙ РАЗРЫВ СОЕДИНЕНИЯ (Аварийный отстрел кабеля).</div>
+                    <div class="temp-gauge-wrap">
+                        <div class="temp-gauge-bar" id="dynamicBar"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+        showConsoleMessage(traceHTML, 'var(--green)');
+
+        // Пошаговая подсветка узлов трассировки
+        const hops = ['traceHop1', 'traceHop2', 'traceHop3', 'traceHop4'];
+        hops.forEach((id, idx) => {
+            setTimeout(() => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.style.opacity = '1';
+                    el.style.backgroundColor = 'rgba(46, 230, 107, 0.15)';
+                    setTimeout(() => el.style.backgroundColor = 'transparent', 400);
+                }
+            }, (idx + 1) * 400);
+        });
+
+        // Плавное заполнение шкалы нагрева до 104°C
+        setTimeout(() => {
+            const bar = document.getElementById('dynamicBar');
+            if (bar) bar.style.width = '100%';
+        }, 1800);
+    }
+
+    // 2. Пинг биометрии
+    function pingBiometrics() {
+        showConsoleMessage(
+            '<div style="color: var(--cyan); font-weight: bold; margin-bottom: 6px;">&gt;&gt; ЗАПРОС БИОМЕТРИИ СОТРУДНИКА [STAFF_409 // ГЛЕНН МАРТИНЕС]:</div>' +
+            '<div>• Кардио-монитор BioDyne Mk.IV: <span style="color: var(--red); font-weight: bold;">0 BPM (АСИСТОЛИЯ)</span></div>' +
+            '<div>• Нейролинк: <span style="color: var(--amber);">ВЫГОРАНИЕ ШИНЫ ДАННЫХ (Температура в момент смерти: 104.2°C)</span></div>' +
+            '<div>• Последняя сигнатура в буфере памяти: <span style="color: var(--red); font-weight: bold;">0xCAESAR</span></div>',
+            'var(--cyan)'
+        );
+    }
+
+    // 3. Замер радиации
+    function scanRadiation() {
+        showConsoleMessage(
+            '<div style="color: var(--amber); font-weight: bold; margin-bottom: 6px;">&gt;&gt; ТЕЛЕМЕТРИЯ КОЛЛЕКТОРА СВЯЗИ №19 [СЕКТОР "GROUND ZERO"]:</div>' +
+            '<div>• Мощность дозы гамма-излучения на оптоволоконном узле: <span style="color: var(--red); font-weight: bold;">420.8 R/h</span></div>' +
+            '<div>• Статус линии: <span style="color: var(--green);">АКТИВНЫЙ ОБМЕН ПАКЕТАМИ (14.8 Гбит/с -> VIP-ложа №1)</span></div>' +
+            '<div>• Вторичный вектор: <span style="color: var(--amber);">Скрытая ретрансляция в локальный Data Pool Пасифики</span></div>',
+            'var(--amber)'
+        );
+    }
+
+    // 4. Попытка отправки дампа в NetWatch (здесь активируется тряска экрана)
+    function escalateNetwatch() {
+        const term = document.getElementById('mainTerminal');
+        term.classList.remove('shake-active');
+        void term.offsetWidth;
+        term.classList.add('shake-active');
+
+        showConsoleMessage(
+            '<div style="color: var(--red); font-weight: bold; margin-bottom: 6px;">&gt;&gt; [ОШИБКА ДОСТУПА // ПЕРЕХВАТ ПАКЕТА]:</div>' +
+            '<div>Попытка соединения с экстренным шлюзом NetWatch заблокирована локальным прокси отеля.</div>' +
+            '<div style="color: var(--amber); margin-top: 4px;">[ПРОТОКОЛ 0xCAESAR]: «Ваша активность зафиксирована. Оставайтесь на своем рабочем месте».</div>',
+            'var(--red)'
+        );
+    }
+
+    // Живой обратный отсчет 6 часов
+    let totalSeconds = 6 * 3600 - 1;
+    setInterval(() => {
+        if (totalSeconds > 0) totalSeconds--;
+        const h = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+        const m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+        const s = String(totalSeconds % 60).padStart(2, '0');
+        document.getElementById('purgeTimer').textContent = `${h}:${m}:${s}`;
+    }, 1000);
+</script>
+
+</body>
+</html>
