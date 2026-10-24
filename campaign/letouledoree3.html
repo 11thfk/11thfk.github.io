@@ -39,17 +39,17 @@
             justify-content: center;
         }
 
-        /* Эффект тряски только при попытке слива в NetWatch */
+        /* Эффект легкой тряски при перегреве */
         @keyframes glitchShake {
             0%, 100% { transform: translate(0, 0); }
-            20% { transform: translate(-4px, 2px); }
-            40% { transform: translate(4px, -2px); }
-            60% { transform: translate(-3px, -2px); }
-            80% { transform: translate(3px, 3px); }
+            20% { transform: translate(-3px, 1px); }
+            40% { transform: translate(3px, -1px); }
+            60% { transform: translate(-2px, -2px); }
+            80% { transform: translate(2px, 2px); }
         }
 
         .shake-active {
-            animation: glitchShake 0.4s ease-in-out 2;
+            animation: glitchShake 0.35s ease-in-out 2;
         }
 
         .systrack-container {
@@ -64,6 +64,7 @@
             position: relative;
         }
 
+        /* Верхний индустриальный заголовок (вместо ломающихся # ===) */
         .sys-banner {
             background-color: rgba(255, 176, 0, 0.06);
             border-top: 2px dashed var(--amber);
@@ -91,6 +92,7 @@
             user-select: none;
         }
 
+        /* Панель метаданных тикета */
         .ticket-meta {
             display: grid;
             grid-template-columns: 1fr;
@@ -144,11 +146,12 @@
             font-weight: bold;
         }
 
+        /* Панель интерактивных кнопок сисадмина */
         .action-bar {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 10px;
-            margin-bottom: 16px;
+            margin-bottom: 24px;
         }
 
         .sys-btn {
@@ -190,12 +193,12 @@
             box-shadow: 0 0 12px rgba(255, 46, 59, 0.25);
         }
 
-        /* Интерактивная консоль теперь сверху */
+        /* Окно вывода интерактивных команд */
         .interactive-console {
             display: none;
             background-color: #090807;
             border: 1px solid var(--amber);
-            padding: 14px 18px;
+            padding: 12px 16px;
             margin-bottom: 24px;
             font-size: 0.92em;
             border-radius: 3px;
@@ -207,6 +210,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
+        /* Неразрывные разделители --- [ ЗАГОЛОВОК ] --- */
         .section-header {
             display: flex;
             align-items: center;
@@ -236,6 +240,7 @@
             white-space: nowrap;
         }
 
+        /* Описание инцидента */
         .incident-box {
             background-color: var(--bg-card);
             border: 1px solid var(--border-ind);
@@ -251,6 +256,7 @@
             margin-bottom: 0;
         }
 
+        /* Блок трассировки маршрута (Traceroute) */
         .trace-terminal {
             background-color: #080907;
             border: 1px solid #263829;
@@ -333,6 +339,7 @@
             display: inline-block;
         }
 
+        /* Аварийный блок перегрева деки */
         .overheat-box {
             background-color: rgba(255, 46, 59, 0.1);
             border: 1px solid var(--red);
@@ -364,6 +371,7 @@
             transition: width 0.4s ease;
         }
 
+        /* Комментарии к тикету */
         .comments-list {
             display: flex;
             flex-direction: column;
@@ -431,6 +439,7 @@
             color: #ffd6d9;
         }
 
+        /* Подвал с живым таймером удаления */
         .purge-footer {
             margin-top: 26px;
             padding: 12px 16px;
@@ -451,6 +460,7 @@
             letter-spacing: 1px;
         }
 
+        /* Адаптивность для мобильных устройств */
         @media (max-width: 600px) {
             body {
                 padding: 10px;
@@ -508,7 +518,7 @@
             <span class="meta-key">ПРИОРИТЕТ:</span>
             <span class="prio-crit">КРИТИЧЕСКИЙ [Красный]</span>
             <span style="color: var(--text-muted);">-&gt;</span>
-            <span class="prio-low">[ИЗМЕНЕНО ДИРЕКЦИЕЙ НА: НИЗКИЙ]</span>
+            <span class="prio-low" id="prioBadge">[ИЗМЕНЕНО ДИРЕКЦИЕЙ НА: НИЗКИЙ]</span>
         </div>
         <div class="meta-row">
             <span class="meta-key">АВТОР:</span>
@@ -520,7 +530,7 @@
         </div>
     </div>
 
-    <!-- Интерактивные кнопки управления -->
+    <!-- Интерактивные кнопки управления узлом -->
     <div class="action-bar">
         <button class="sys-btn" onclick="replayTrace()">
             <span>▶</span> ЭМУЛЯЦИЯ ТРАССИРОВКИ
@@ -536,7 +546,7 @@
         </button>
     </div>
 
-    <!-- Консоль отклика вынесена наверх (под кнопки) -->
+    <!-- Консоль отклика на нажатие кнопок -->
     <div class="interactive-console" id="sysConsole"></div>
 
     <!-- РАЗДЕЛ 1: ОПИСАНИЕ ИНЦИДЕНТА -->
@@ -557,24 +567,24 @@
     <div class="trace-terminal">
         <div class="cmd-prompt">$ root@etoile-penthouse:~# tracepath -n -p 6660 192.168.0.254</div>
 
-        <div class="hop-list">
-            <div class="hop-row">
+        <div class="hop-list" id="hopList">
+            <div class="hop-row" id="hop1">
                 <span>1: <span class="hop-ip">[192.168.0.1]</span></span>
                 <span class="hop-host">L_Etoile_40F_Switch</span>
                 <span class="hop-dots"></span>
                 <span class="hop-time">0.412 ms</span>
             </div>
-            <div class="hop-row">
+            <div class="hop-row" id="hop2">
                 <span>2: <span class="hop-ip">[10.44.12.08]</span></span>
                 <span class="hop-host">Marina_Substation_B</span>
                 <span class="hop-dots"></span>
                 <span class="hop-time">1.105 ms</span>
             </div>
-            <div class="hop-row">
+            <div class="hop-row" id="hop3">
                 <span>3: <span class="hop-ip">[172.16.0.00]</span></span>
                 <span class="hop-err">[ОШИБКА: УЗЕЛ НЕ В РЕЕСТРЕ NETWATCH]</span>
             </div>
-            <div class="hop-row">
+            <div class="hop-row" id="hop4">
                 <span>4: <span class="hop-ip">[000.00.0.00]</span></span>
                 <span class="hop-darpa">[ПРОТОКОЛ СТАРОЙ СЕТИ: D.A.R.P.A_v2]</span>
             </div>
@@ -592,7 +602,7 @@
             <div id="tempReadout">$ Температура чипа кибердеки техника: <strong>78°C... 89°C... 104°C!</strong></div>
             <div style="color: var(--amber); font-weight: bold;">$ ПРИНУДИТЕЛЬНЫЙ РАЗРЫВ СОЕДИНЕНИЯ (Аварийный отстрел кабеля).</div>
             <div class="temp-gauge-wrap">
-                <div class="temp-gauge-bar" id="tempBar" style="width: 100%;"></div>
+                <div class="temp-gauge-bar" id="tempBar"></div>
             </div>
         </div>
     </div>
@@ -603,6 +613,7 @@
     </div>
 
     <div class="comments-list">
+        <!-- Комментарий 1 -->
         <div class="comment-card">
             <div class="comment-header">
                 <span class="c-author-tech">[18:22] Гленн Мартинес (IT-отдел):</span>
@@ -613,6 +624,7 @@
             </blockquote>
         </div>
 
+        <!-- Комментарий 2 -->
         <div class="comment-card boss-card">
             <div class="comment-header">
                 <span class="c-author-boss">[18:24] Артур Вэнс [Управляющий отелем]:</span>
@@ -623,6 +635,7 @@
             </blockquote>
         </div>
 
+        <!-- Комментарий 3 -->
         <div class="comment-card">
             <div class="comment-header">
                 <span class="c-author-tech">[18:26] Гленн Мартинес (IT-отдел):</span>
@@ -633,6 +646,7 @@
             </blockquote>
         </div>
 
+        <!-- Комментарий 4 (Системный) -->
         <div class="comment-card sys-kill-card">
             <div class="comment-header">
                 <span class="c-author-sys">[18:27] СИСТЕМНОЕ УВЕДОМЛЕНИЕ:</span>
@@ -660,35 +674,47 @@
         consoleBox.style.display = 'block';
         consoleBox.style.borderColor = borderColor;
         consoleBox.innerHTML = htmlContent;
-        // Плавный скролл к консоли наверху
-        consoleBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    // 1. Интерактивная эмуляция трассировки сверху
+    // 1. Эмуляция трассировки и скачка температуры
     function replayTrace() {
+        const hops = ['hop1', 'hop2', 'hop3', 'hop4'];
         const tempBar = document.getElementById('tempBar');
         const tempReadout = document.getElementById('tempReadout');
+        const term = document.getElementById('mainTerminal');
 
-        tempBar.style.width = '20%';
-        tempReadout.innerHTML = '$ Повторный опрос узлов... Температура чипа: <strong>45°C</strong>';
+        tempBar.style.width = '15%';
+        tempReadout.innerHTML = '$ Повторный опрос маршрута 192.168.0.254... Нагрев чипа: <strong>45°C</strong>';
 
         showConsoleMessage(
-            '<div style="color: var(--green); font-weight: bold; margin-bottom: 6px;">&gt;&gt; ЗАПУСК ТРАССИРОВКИ (TRACEPATH):</div>' +
-            '<div style="color: #ffffff;">1: [192.168.0.1] L_Etoile_40F_Switch ................... 0.412 ms</div>' +
-            '<div style="color: #ffffff;">2: [10.44.12.08] Marina_Substation_B .............. 1.105 ms</div>' +
-            '<div style="color: var(--red);">3: [172.16.0.00] [ОШИБКА: УЗЕЛ НЕ В РЕЕСТРЕ NETWATCH]</div>' +
-            '<div style="color: var(--amber);">4: [000.00.0.00] [ПРОТОКОЛ СТАРОЙ СЕТИ: D.A.R.P.A_v2]</div>' +
-            '<div style="color: var(--red); margin-top: 6px; font-weight: bold;">⚠ Встречный импульс! Нагрев деки до 104°C! Аварийный сброс!</div>',
+            '<span style="color: var(--green);">&gt;&gt; ВЫПОЛНЯЕТСЯ TRACEPATH...</span> Опрос узлов от коммутатора 40-го этажа до сектора "GROUND ZERO"...',
             'var(--green)'
         );
 
-        setTimeout(() => {
-            tempBar.style.width = '100%';
-            tempReadout.innerHTML = '$ Температура чипа кибердеки техника: <strong>78°C... 89°C... 104°C!</strong>';
-        }, 800);
+        hops.forEach((id, idx) => {
+            const el = document.getElementById(id);
+            el.style.opacity = '0.2';
+            setTimeout(() => {
+                el.style.opacity = '1';
+                el.style.backgroundColor = 'rgba(255, 176, 0, 0.12)';
+                setTimeout(() => el.style.backgroundColor = 'transparent', 400);
+
+                if (idx === 2) {
+                    tempBar.style.width = '75%';
+                    tempReadout.innerHTML = '$ Температура чипа кибердеки техника: <strong>78°C... 89°C...</strong>';
+                }
+                if (idx === 3) {
+                    tempBar.style.width = '100%';
+                    tempReadout.innerHTML = '$ Температура чипа кибердеки техника: <strong>78°C... 89°C... 104°C! [КРИТИЧЕСКИЙ ПЕРЕГРЕВ]</strong>';
+                    term.classList.remove('shake-active');
+                    void term.offsetWidth;
+                    term.classList.add('shake-active');
+                }
+            }, (idx + 1) * 350);
+        });
     }
 
-    // 2. Пинг биометрии
+    // 2. Пинг кардио-импланта Мартинеса
     function pingBiometrics() {
         showConsoleMessage(
             '<div style="color: var(--cyan); font-weight: bold;">&gt;&gt; ЗАПРОС БИОМЕТРИИ СОТРУДНИКА [STAFF_409 // ГЛЕНН МАРТИНЕС]:</div>' +
@@ -699,7 +725,7 @@
         );
     }
 
-    // 3. Замер радиации
+    // 3. Замер радиации коллектора №19
     function scanRadiation() {
         showConsoleMessage(
             '<div style="color: var(--amber); font-weight: bold;">&gt;&gt; ТЕЛЕМЕТРИЯ КОЛЛЕКТОРА СВЯЗИ №19 [СЕКТОР "GROUND ZERO"]:</div>' +
@@ -710,7 +736,7 @@
         );
     }
 
-    // 4. Попытка слива в NetWatch (только здесь включается тряска экрана)
+    // 4. Попытка отправить дамп в NetWatch
     function escalateNetwatch() {
         const term = document.getElementById('mainTerminal');
         term.classList.remove('shake-active');
@@ -725,7 +751,7 @@
         );
     }
 
-    // Живой таймер удаления
+    // Живой обратный отсчет 6 часов
     let totalSeconds = 6 * 3600 - 1;
     setInterval(() => {
         if (totalSeconds > 0) totalSeconds--;
