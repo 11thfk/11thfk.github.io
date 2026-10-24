@@ -3,738 +3,763 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>КОНСЬЕРЖ_УРОВЕНЬ_2 // СПИСОК_ГОСТЕЙ_2045.dat</title>
+    <title>SysTrack v4.02 // #ERR-9940-VIP</title>
     <style>
         * {
             box-sizing: border-box;
         }
 
+        :root {
+            --bg-main: #0c0b09;
+            --bg-panel: #14120f;
+            --bg-card: #1b1814;
+            --amber: #ffb000;
+            --amber-dim: #9e6d00;
+            --green: #2ee66b;
+            --red: #ff2e3b;
+            --cyan: #00e1d9;
+            --text-main: #e6dfd5;
+            --text-muted: #8c8275;
+            --border-ind: #332d24;
+        }
+
         body {
-            background-color: #080a0f;
-            color: #d1d8e0;
-            font-family: 'Consolas', 'Courier New', Courier, monospace;
+            background-color: var(--bg-main);
+            background-image: 
+                radial-gradient(rgba(255, 176, 0, 0.03) 1px, transparent 0),
+                linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.8));
+            background-size: 20px 20px, 100% 100%;
+            color: var(--text-main);
+            font-family: 'Consolas', 'Lucida Console', 'Courier New', monospace;
             font-size: 15px;
-            line-height: 1.5;
+            line-height: 1.55;
             padding: 20px;
             margin: 0;
             display: flex;
             justify-content: center;
         }
 
-        .terminal {
-            background-color: #10141d;
-            border: 1px solid #263142;
-            border-radius: 6px;
-            padding: 28px;
-            max-width: 880px;
+        /* Эффект легкой тряски при перегреве */
+        @keyframes glitchShake {
+            0%, 100% { transform: translate(0, 0); }
+            20% { transform: translate(-3px, 1px); }
+            40% { transform: translate(3px, -1px); }
+            60% { transform: translate(-2px, -2px); }
+            80% { transform: translate(2px, 2px); }
+        }
+
+        .shake-active {
+            animation: glitchShake 0.35s ease-in-out 2;
+        }
+
+        .systrack-container {
+            background-color: var(--bg-panel);
+            border: 2px solid var(--border-ind);
+            border-top: 4px solid var(--amber);
+            border-radius: 4px;
+            max-width: 900px;
             width: 100%;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.9);
+            padding: 26px 30px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.95);
             position: relative;
         }
 
-        /* Верхняя строка загрузки с резиновым отточием */
-        .decrypt-bar {
+        /* Верхний индустриальный заголовок (вместо ломающихся # ===) */
+        .sys-banner {
+            background-color: rgba(255, 176, 0, 0.06);
+            border-top: 2px dashed var(--amber);
+            border-bottom: 2px dashed var(--amber);
+            padding: 14px 16px;
+            margin-bottom: 22px;
+            color: var(--amber);
+            font-weight: bold;
+            letter-spacing: 0.3px;
+        }
+
+        .sys-banner-line {
             display: flex;
             align-items: baseline;
-            color: #00ff9d;
-            font-weight: bold;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
-            gap: 6px;
-        }
-
-        .decrypt-dots {
-            flex-grow: 1;
-            border-bottom: 2px dotted #00ff9d;
-            min-width: 30px;
-            opacity: 0.5;
-        }
-
-        .access-badge {
-            display: inline-block;
-            background-color: rgba(255, 215, 0, 0.1);
-            border: 1px solid #ffd700;
-            color: #ffd700;
-            font-weight: bold;
-            padding: 4px 12px;
-            border-radius: 3px;
-            margin-bottom: 18px;
-            text-shadow: 0 0 6px rgba(255, 215, 0, 0.3);
-        }
-
-        /* Системные логи в шапке */
-        .sys-logs {
-            background-color: #0c0f16;
-            border-left: 3px solid #00e5ff;
-            padding: 12px 16px;
-            margin-bottom: 20px;
-            font-size: 0.95em;
-        }
-
-        .sys-logs div {
             margin-bottom: 4px;
-            color: #00e5ff;
         }
 
-        .sys-logs div:last-child {
+        .sys-banner-line:last-child {
             margin-bottom: 0;
         }
 
-        .sys-logs .warning {
-            color: #ff9f1a;
-            font-weight: bold;
-        }
-
-        /* Панель управления списком */
-        .toolbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-
-        .toolbar-hint {
-            color: #7f8fa6;
-            font-size: 0.9em;
-            font-style: italic;
-        }
-
-        .btn-toggle-all {
-            background-color: rgba(0, 229, 255, 0.08);
-            color: #00e5ff;
-            border: 1px solid rgba(0, 229, 255, 0.35);
-            font-family: inherit;
-            font-size: 0.85em;
-            padding: 5px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn-toggle-all:hover {
-            background-color: rgba(0, 229, 255, 0.2);
-            box-shadow: 0 0 10px rgba(0, 229, 255, 0.25);
-        }
-
-        /* Карточки гостей */
-        details.guest-card {
-            background-color: #141923;
-            border: 1px solid #263042;
-            border-radius: 4px;
-            margin-bottom: 14px;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        details.guest-card:hover {
-            border-color: #3b4b66;
-        }
-
-        details.guest-card[open] {
-            background-color: #121720;
-            border-color: #00e5ff;
-            box-shadow: 0 0 15px rgba(0, 229, 255, 0.08);
-        }
-
-        /* Особое оформление для VIP и Взломанных карт */
-        details.guest-card.vip-card[open] {
-            border-color: #ffd700;
-            box-shadow: 0 0 15px rgba(255, 215, 0, 0.12);
-        }
-
-        details.guest-card.hacked-card {
-            border-color: #4a2333;
-            background-color: #161219;
-        }
-
-        details.guest-card.hacked-card[open] {
-            border-color: #ff3860;
-            box-shadow: 0 0 15px rgba(255, 56, 96, 0.15);
-        }
-
-        summary.card-header {
-            padding: 13px 16px;
-            cursor: pointer;
-            list-style: none;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
+        .hash-prefix {
+            color: var(--amber-dim);
+            margin-right: 10px;
             user-select: none;
+        }
+
+        /* Панель метаданных тикета */
+        .ticket-meta {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-ind);
+            border-left: 4px solid var(--red);
+            padding: 16px 20px;
+            margin-bottom: 20px;
+        }
+
+        .meta-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .meta-key {
+            color: var(--amber);
             font-weight: bold;
         }
 
-        summary.card-header::-webkit-details-marker {
-            display: none;
+        .meta-val {
+            color: #ffffff;
         }
 
-        summary.card-header:hover {
-            background-color: rgba(255, 255, 255, 0.03);
+        .prio-crit {
+            background-color: rgba(255, 46, 59, 0.15);
+            border: 1px solid var(--red);
+            color: var(--red);
+            padding: 1px 7px;
+            font-weight: bold;
+            text-decoration: line-through;
+            opacity: 0.75;
         }
 
-        .id-title {
-            color: #00e5ff;
-            word-break: break-word;
+        .prio-low {
+            background-color: rgba(255, 176, 0, 0.15);
+            border: 1px solid var(--amber);
+            color: var(--amber);
+            padding: 1px 8px;
+            font-weight: bold;
         }
 
-        .vip-card .id-title {
-            color: #ffd700;
+        .status-closed {
+            background-color: rgba(140, 130, 117, 0.15);
+            border: 1px solid var(--text-muted);
+            color: #d1ccc0;
+            padding: 1px 8px;
+            font-weight: bold;
         }
 
-        .hacked-card .id-title {
-            color: #ff3860;
+        /* Панель интерактивных кнопок сисадмина */
+        .action-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 24px;
         }
 
-        .guest-preview {
-            color: #a4b0be;
-            font-weight: normal;
-            font-size: 0.92em;
-            margin-left: 8px;
-        }
-
-        .card-toggle-icon {
-            font-size: 0.8em;
-            color: #7f8fa6;
-            border: 1px solid #354154;
-            padding: 2px 8px;
+        .sys-btn {
+            background-color: #1f1b16;
+            color: var(--amber);
+            border: 1px solid var(--amber-dim);
+            padding: 10px 12px;
+            font-family: inherit;
+            font-size: 0.86em;
+            font-weight: bold;
+            text-align: left;
+            cursor: pointer;
             border-radius: 3px;
-            flex-shrink: 0;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        details.guest-card[open] .card-toggle-icon::after {
-            content: "− СВЕРНУТЬ";
+        .sys-btn:hover {
+            background-color: rgba(255, 176, 0, 0.14);
+            border-color: var(--amber);
+            box-shadow: 0 0 12px rgba(255, 176, 0, 0.2);
+            transform: translateY(-1px);
         }
 
-        details.guest-card:not([open]) .card-toggle-icon::after {
-            content: "+ ОТКРЫТЬ";
+        .sys-btn:active {
+            transform: translateY(0);
         }
 
-        .card-body {
-            padding: 14px 18px 18px 18px;
-            border-top: 1px dashed #263042;
-            animation: fadeIn 0.2s ease-out;
+        .sys-btn.btn-danger {
+            color: var(--red);
+            border-color: rgba(255, 46, 59, 0.5);
+        }
+
+        .sys-btn.btn-danger:hover {
+            background-color: rgba(255, 46, 59, 0.15);
+            border-color: var(--red);
+            box-shadow: 0 0 12px rgba(255, 46, 59, 0.25);
+        }
+
+        /* Окно вывода интерактивных команд */
+        .interactive-console {
+            display: none;
+            background-color: #090807;
+            border: 1px solid var(--amber);
+            padding: 12px 16px;
+            margin-bottom: 24px;
+            font-size: 0.92em;
+            border-radius: 3px;
+            animation: fadeIn 0.25s ease-out;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-4px); }
+            from { opacity: 0; transform: translateY(-5px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Строки данных внутри карточки */
-        .field-row {
-            margin-bottom: 10px;
-        }
-
-        .field-label {
-            color: #70a1ff;
+        /* Неразрывные разделители --- [ ЗАГОЛОВОК ] --- */
+        .section-header {
+            display: flex;
+            align-items: center;
+            color: var(--amber);
             font-weight: bold;
+            margin: 28px 0 16px 0;
+            gap: 10px;
+            user-select: none;
         }
 
-        .field-val {
-            color: #f1f2f6;
+        .section-header::before {
+            content: "---";
+            color: var(--amber-dim);
+            flex-shrink: 0;
         }
 
-        .status-ok {
-            color: #00ff9d;
-            font-weight: bold;
+        .section-header::after {
+            content: "";
+            flex-grow: 1;
+            border-bottom: 2px dashed var(--border-ind);
         }
 
-        .status-pending {
-            color: #ff9f1a;
-            font-weight: bold;
+        .section-title {
+            background-color: rgba(255, 176, 0, 0.08);
+            border: 1px solid var(--amber-dim);
+            padding: 2px 10px;
+            white-space: nowrap;
         }
 
-        /* Комментарии и правки Артура Вэнса */
-        .vance-edit {
-            display: inline-block;
-            background-color: rgba(255, 159, 26, 0.1);
-            border: 1px solid rgba(255, 159, 26, 0.4);
-            color: #ffbe76;
-            padding: 3px 8px;
-            border-radius: 3px;
-            font-size: 0.92em;
-            margin-top: 4px;
+        /* Описание инцидента */
+        .incident-box {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-ind);
+            padding: 16px 20px;
+            color: var(--text-main);
         }
 
-        .sec-tag {
-            display: inline-block;
-            background-color: rgba(255, 56, 96, 0.15);
-            border: 1px solid #ff3860;
-            color: #ff6b81;
-            padding: 1px 6px;
-            border-radius: 3px;
-            font-size: 0.88em;
-            font-weight: bold;
+        .incident-box p {
+            margin: 0 0 14px 0;
         }
 
-        .weapon-warn {
-            color: #ff5252;
-            font-weight: bold;
-        }
-
-        /* Списки особых отметок */
-        .notes-list {
-            margin: 6px 0 0 0;
-            padding-left: 20px;
-            color: #dfe4ea;
-        }
-
-        .notes-list li {
-            margin-bottom: 6px;
-        }
-
-        /* Оформление инъекции и редактируемых полей игроков */
-        .intrusion-ok {
-            color: #00ff9d;
-            font-weight: normal;
-        }
-
-        .overwrite-tag {
-            color: #ff6b81;
-            background-color: rgba(255, 56, 96, 0.12);
-            padding: 2px 6px;
-            border-radius: 3px;
-            margin-right: 6px;
-        }
-
-        .editable-input {
-            display: inline-block;
-            min-width: 160px;
-            color: #00ff9d;
-            background-color: rgba(0, 255, 157, 0.07);
-            border-bottom: 1px dashed #00ff9d;
-            padding: 1px 8px;
-            border-radius: 2px;
-            outline: none;
-            cursor: text;
-        }
-
-        .editable-input:focus {
-            background-color: rgba(0, 255, 157, 0.15);
-            box-shadow: 0 0 8px rgba(0, 255, 157, 0.3);
-        }
-
-        /* Нижний блок перехвата Caesar */
-        .override-footer {
-            margin-top: 24px;
-            background-color: #140d12;
-            border: 1px solid #ff3860;
-            border-left: 4px solid #ff3860;
-            padding: 14px 18px;
-            border-radius: 4px;
-        }
-
-        .override-footer div {
-            margin-bottom: 6px;
-        }
-
-        .override-footer div:last-child {
+        .incident-box p:last-child {
             margin-bottom: 0;
         }
 
-        .log-warn { color: #ff9f1a; }
-        .log-err { color: #ff5252; font-weight: bold; }
-        .log-caesar {
-            color: #00ff9d;
-            font-weight: bold;
-            text-shadow: 0 0 6px rgba(0, 255, 157, 0.4);
+        /* Блок трассировки маршрута (Traceroute) */
+        .trace-terminal {
+            background-color: #080907;
+            border: 1px solid #263829;
+            border-left: 4px solid var(--green);
+            padding: 18px 20px;
+            font-size: 0.95em;
+            color: #d8f3dc;
         }
 
-        /* Кнопка выхода из узла */
-        .eof-bar {
-            margin-top: 22px;
-            text-align: center;
-            padding: 12px;
-            background-color: #0b0e14;
-            border: 1px dashed #3d4852;
-            color: #7f8fa6;
+        .cmd-prompt {
+            color: var(--green);
             font-weight: bold;
-            cursor: pointer;
-            user-select: none;
-            transition: all 0.2s ease;
+            margin-bottom: 14px;
+            word-break: break-all;
         }
 
-        .eof-bar:hover {
+        .hop-list {
+            margin-bottom: 16px;
+        }
+
+        .hop-row {
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 6px;
+            transition: background-color 0.3s ease;
+        }
+
+        .hop-ip {
+            color: var(--cyan);
+            font-weight: bold;
+        }
+
+        .hop-host {
             color: #ffffff;
-            border-color: #00e5ff;
-            text-shadow: 0 0 6px rgba(0, 229, 255, 0.5);
         }
 
-        .blink {
-            animation: blinker 1.2s linear infinite;
+        .hop-dots {
+            flex-grow: 1;
+            border-bottom: 1px dotted #3a5a40;
+            min-width: 20px;
         }
 
-        @keyframes blinker {
-            50% { opacity: 0; }
+        .hop-time {
+            color: var(--green);
+            font-weight: bold;
         }
 
-        /* Экран отключения при выходе */
-        .disconnect-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background-color: #05070a;
-            color: #00ff9d;
-            z-index: 999;
+        .hop-err {
+            color: var(--red);
+            font-weight: bold;
+        }
+
+        .hop-darpa {
+            color: var(--amber);
+            background-color: rgba(255, 176, 0, 0.12);
+            padding: 0 6px;
+            border: 1px solid var(--amber);
+            font-weight: bold;
+        }
+
+        .trace-warnings {
+            border-top: 1px dashed #263829;
+            border-bottom: 1px dashed #263829;
+            padding: 12px 0;
+            margin: 14px 0;
+            color: var(--amber);
+        }
+
+        .trace-warnings div {
+            margin-bottom: 4px;
+        }
+
+        .rad-hazard {
+            color: #000000;
+            background-color: var(--amber);
+            font-weight: bold;
+            padding: 1px 6px;
+            display: inline-block;
+        }
+
+        /* Аварийный блок перегрева деки */
+        .overheat-box {
+            background-color: rgba(255, 46, 59, 0.1);
+            border: 1px solid var(--red);
+            padding: 12px 16px;
+            color: #ffdde0;
+        }
+
+        .overheat-box div {
+            margin-bottom: 6px;
+        }
+
+        .overheat-box div:last-child {
+            margin-bottom: 0;
+        }
+
+        .temp-gauge-wrap {
+            margin-top: 10px;
+            background-color: #1a090b;
+            border: 1px solid #5c161e;
+            height: 10px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .temp-gauge-bar {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(90deg, #ffb000 0%, #ff5e00 50%, #ff002b 100%);
+            transition: width 0.4s ease;
+        }
+
+        /* Комментарии к тикету */
+        .comments-list {
+            display: flex;
             flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 20px;
-            cursor: pointer;
+            gap: 14px;
         }
 
-        /* Адаптация под мобильные экраны */
+        .comment-card {
+            background-color: var(--bg-card);
+            border: 1px solid var(--border-ind);
+            border-radius: 3px;
+            padding: 14px 18px;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        .c-time {
+            color: var(--text-muted);
+        }
+
+        .c-author-tech {
+            color: var(--cyan);
+        }
+
+        .c-author-boss {
+            color: var(--amber);
+        }
+
+        .c-author-sys {
+            color: var(--red);
+        }
+
+        .comment-quote {
+            margin: 0;
+            padding-left: 14px;
+            border-left: 3px solid #4a4236;
+            color: var(--text-main);
+        }
+
+        .comment-card.boss-card {
+            border-left: 3px solid var(--amber);
+        }
+
+        .comment-card.boss-card .comment-quote {
+            border-left-color: var(--amber-dim);
+            color: #fff3d6;
+        }
+
+        .comment-card.sys-kill-card {
+            background-color: rgba(255, 46, 59, 0.08);
+            border: 1px solid var(--red);
+            border-left: 4px solid var(--red);
+            box-shadow: 0 0 20px rgba(255, 46, 59, 0.12);
+        }
+
+        .comment-card.sys-kill-card .comment-quote {
+            border-left-color: var(--red);
+            color: #ffd6d9;
+        }
+
+        /* Подвал с живым таймером удаления */
+        .purge-footer {
+            margin-top: 26px;
+            padding: 12px 16px;
+            background-color: #090807;
+            border: 1px dashed var(--red);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            font-size: 0.9em;
+        }
+
+        .timer-val {
+            color: var(--red);
+            font-weight: bold;
+            font-size: 1.05em;
+            letter-spacing: 1px;
+        }
+
+        /* Адаптивность для мобильных устройств */
         @media (max-width: 600px) {
             body {
                 padding: 10px;
                 font-size: 13.5px;
             }
-            .terminal {
+            .systrack-container {
                 padding: 16px;
             }
-            summary.card-header {
-                padding: 11px 12px;
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 6px;
+            .section-title {
+                white-space: normal;
+                font-size: 0.92em;
             }
-            .card-toggle-icon {
-                align-self: flex-end;
+            .hop-dots {
+                display: none;
             }
-            .card-body {
-                padding: 12px;
+            .hop-row {
+                justify-content: space-between;
+                border-bottom: 1px solid #162418;
+                padding-bottom: 4px;
             }
         }
     </style>
 </head>
 <body>
 
-<div class="terminal">
-    <!-- Шапка расшифровки с резиновым отточием -->
-    <div class="decrypt-bar">
-        <span>[РАСШИФРОВКА: СПИСОК_ГОСТЕЙ_2045.dat]</span>
-        <span class="decrypt-dots"></span>
-        <span>[100% ЗАВЕРШЕНО]</span>
+<div class="systrack-container" id="mainTerminal">
+
+    <!-- Индустриальная шапка -->
+    <div class="sys-banner">
+        <div class="sys-banner-line">
+            <span class="hash-prefix">#</span>
+            <span>L’ÉTOILE DORÉE // IT-INFRASTRUCTURE &amp; SUB-NET MAINTENANCE</span>
+        </div>
+        <div class="sys-banner-line">
+            <span class="hash-prefix">#</span>
+            <span>СИСТЕМА ТИКЕТОВ: SysTrack v4.02 [Локальный узел 40-го этажа]</span>
+        </div>
+        <div class="sys-banner-line">
+            <span class="hash-prefix">#</span>
+            <span>ФАЙЛ: NET_ANOMALY_LOG [DV 10]</span>
+        </div>
     </div>
 
-    <div class="access-badge">[УРОВЕНЬ ДОСТУПА: КОНСЬЕРЖ_УРОВЕНЬ_2]</div>
-
-    <div class="sys-logs">
-        <div>&gt;&gt; ЗАГРУЗКА РЕЕСТРА ГОСТЕЙ: ФОНД «ВОЗРОЖДЕНИЕ НАЙТ-СИТИ»</div>
-        <div>&gt;&gt; ДАТА: 14.11.2045 // ЛОКАЦИЯ: «L’ÉTOILE DORÉE» ПЕНТХАУС (ЭТАЖ 40)</div>
-        <div class="warning">&gt;&gt; ВНИМАНИЕ: Обнаружены поврежденные сектора памяти [0x88F4A]...</div>
+    <!-- Метаданные тикета -->
+    <div class="ticket-meta">
+        <div class="meta-row">
+            <span class="meta-key">TICKET_ID:</span>
+            <span class="meta-val">#ERR-9940-VIP</span>
+        </div>
+        <div class="meta-row">
+            <span class="meta-key">ДАТА СОЗДАНИЯ:</span>
+            <span class="meta-val">14.11.2045 // 18:15:22</span>
+        </div>
+        <div class="meta-row">
+            <span class="meta-key">ПРИОРИТЕТ:</span>
+            <span class="prio-crit">КРИТИЧЕСКИЙ [Красный]</span>
+            <span style="color: var(--text-muted);">-&gt;</span>
+            <span class="prio-low" id="prioBadge">[ИЗМЕНЕНО ДИРЕКЦИЕЙ НА: НИЗКИЙ]</span>
+        </div>
+        <div class="meta-row">
+            <span class="meta-key">АВТОР:</span>
+            <span class="meta-val">Гленн Мартинес [Старший сетевой техник]</span>
+        </div>
+        <div class="meta-row">
+            <span class="meta-key">СТАТУС:</span>
+            <span class="status-closed">ПРИНУДИТЕЛЬНО ЗАКРЫТ [Архив]</span>
+        </div>
     </div>
 
-    <div class="toolbar">
-        <span class="toolbar-hint">* Нажмите на строку гостя для просмотра карточки (поля #088–#091 можно редактировать)</span>
-        <button class="btn-toggle-all" id="toggleAllBtn" onclick="toggleAllCards()">Развернуть все</button>
+    <!-- Интерактивные кнопки управления узлом -->
+    <div class="action-bar">
+        <button class="sys-btn" onclick="replayTrace()">
+            <span>▶</span> ЭМУЛЯЦИЯ ТРАССИРОВКИ
+        </button>
+        <button class="sys-btn" onclick="pingBiometrics()">
+            <span>♥</span> ТЕЛЕМЕТРИЯ: Г. МАРТИНЕС
+        </button>
+        <button class="sys-btn" onclick="scanRadiation()">
+            <span>☢</span> ДАТЧИК ФОНА ШЛЮЗА №19
+        </button>
+        <button class="sys-btn btn-danger" onclick="escalateNetwatch()">
+            <span>🚨</span> ОТПРАВИТЬ ДАМП В NETWATCH
+        </button>
     </div>
 
-    <!-- КАРТОЧКА #001-VIP (теперь закрыта по умолчанию) -->
-    <details class="guest-card vip-card">
-        <summary class="card-header">
-            <div>
-                <span class="id-title">ID: #001-VIP // ЛОЖА №1</span>
-                <span class="guest-preview">— C. Caesar</span>
-            </div>
-            <span class="card-toggle-icon"></span>
-        </summary>
-        <div class="card-body">
-            <div class="field-row">
-                <span class="field-label">ИМЯ ГОСТЯ:</span> <span class="field-val">C. Caesar</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">ОРГАНИЗАЦИЯ:</span> <span class="field-val">Трастовый фонд «Rubicon» (Цюрих / Свободная Европейская зона)</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">СТАТУС ОПЛАТЫ:</span> <span class="status-ok">ПОДТВЕРЖДЕНО</span><br>
-                <span class="vance-edit">[РЕДАКТИРОВАНО СОТРУДНИКОМ: ARTHUR_VANCE. КОММЕНТАРИЙ: Бартерный перевод: 15% акций Муниципального Водоканала Найт-Сити -&gt; Артур Вэнс. «L’ÉTOILE DORÉE»]</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">ОСОБЫЕ ОТМЕТКИ:</span>
-                <ul class="notes-list">
-                    <li>В ложу доставлен автономный терминал связи.</li>
-                    <li>Охрана периметра: 2х Соло [Контракт с «Lazarus Group», оплачено авансом].</li>
-                    <li><span class="weapon-warn">Не входить. Не стучать. Оптоволоконный кабель на полу НЕ трогать.</span></li>
-                </ul>
-            </div>
-        </div>
-    </details>
+    <!-- Консоль отклика на нажатие кнопок -->
+    <div class="interactive-console" id="sysConsole"></div>
 
-    <!-- КАРТОЧКА #014-CORP -->
-    <details class="guest-card">
-        <summary class="card-header">
-            <div>
-                <span class="id-title">ID: #014-CORP // ТЕРРАСА / БАР</span>
-                <span class="guest-preview">— Вайс, Маркус</span>
-            </div>
-            <span class="card-toggle-icon"></span>
-        </summary>
-        <div class="card-body">
-            <div class="field-row">
-                <span class="field-label">ИМЯ ГОСТЯ:</span> <span class="field-val">Вайс, Маркус</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">ОРГАНИЗАЦИЯ:</span> <span class="field-val">Embrace Group // Вице-президент</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">СТАТУС ОПЛАТЫ:</span> <span class="status-ok">ПОДТВЕРЖДЕНО</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">СТАТУС ОРУЖИЯ:</span> <span class="field-val">Сдано в сейф охраны №04 [Тяжелый пистолет «Militech Avenger»]</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">ОСОБЫЕ ОТМЕТКИ:</span>
-                <ul class="notes-list">
-                    <li>Подавать ТОЛЬКО чистый бурбон «Old Kentucky». Двойная порция.</li>
-                    <li>Счет закрывать за счет заведения — клиент на грани нервного срыва после инцидента в Пасифике.</li>
-                    <li>Держать подальше от делегации Continental Brands во избежание драки.</li>
-                </ul>
-            </div>
-        </div>
-    </details>
-
-    <!-- КАРТОЧКА #019-CORP -->
-    <details class="guest-card">
-        <summary class="card-header">
-            <div>
-                <span class="id-title">ID: #019-CORP // ГЛАВНЫЙ ЗАЛ</span>
-                <span class="guest-preview">— Дюран, Эвелин</span>
-            </div>
-            <span class="card-toggle-icon"></span>
-        </summary>
-        <div class="card-body">
-            <div class="field-row">
-                <span class="field-label">ИМЯ ГОСТЯ:</span> <span class="field-val">Дюран, Эвелин</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">ОРГАНИЗАЦИЯ:</span> <span class="field-val">Continental Brands // Глава Research &amp; Development</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">СТАТУС ОПЛАТЫ:</span> <span class="status-ok">ПОДТВЕРЖДЕНО</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">СТАТУС ОРУЖИЯ:</span> <span class="field-val">Чисто</span> <span class="weapon-warn">[ВНИМАНИЕ: Сканер засек скрытый имплант «Когти», допущена по VIP-регламенту]</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">ОСОБЫЕ ОТМЕТКИ:</span>
-                <ul class="notes-list">
-                    <li>Игристое «Château Delamain» открывать СТРОГО в ее присутствии!</li>
-                    <li>Клиент проявляет симптомы острой паранойи: требует проверять бокалы на нейротоксины.</li>
-                </ul>
-            </div>
-        </div>
-    </details>
-
-    <!-- КАРТОЧКА #042-SOC -->
-    <details class="guest-card">
-        <summary class="card-header">
-            <div>
-                <span class="id-title">ID: #042-SOC // ФОНТАНЫ</span>
-                <span class="guest-preview">— Вокс, Марион («Милли»)</span>
-            </div>
-            <span class="card-toggle-icon"></span>
-        </summary>
-        <div class="card-body">
-            <div class="field-row">
-                <span class="field-label">ИМЯ ГОСТЯ:</span> <span class="field-val">Вокс, Марион</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">ОРГАНИЗАЦИЯ:</span> <span class="field-val">Независимый медиа-консультант NIGHT-CITY INQUIRER POST</span> <span class="sec-tag">[ТЭГ СБ: ЭЛИТНЫЙ ФИКСЕР]</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">СТАТУС ОПЛАТЫ:</span> <span class="status-pending">ОЖИДАЕТ ОПЛАТЫ</span><br>
-                <span class="vance-edit">[РЕДАКТИРОВАНО СОТРУДНИКОМ: ARTHUR_VANCE. КОММЕНТАРИЙ: пропустить в любом случае]</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">СТАТУС ОРУЖИЯ:</span> <span class="field-val">Сдано в сейф охраны №11 [Стилет с мономолекулярной заточкой]</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">ОСОБЫЕ ОТМЕТКИ:</span>
-                <ul class="notes-list">
-                    <li>Просьба называть консультанта по её уличному имени «Милли».</li>
-                    <li>Свободный доступ ко всем столам, кроме Ложи №1.</li>
-                    <li><span class="vance-edit">[ДОБАВЛЕНО СОТРУДНИКОМ: ARTHUR_VANCE. КОММЕНТАРИЙ: Приказ СБ не вмешиваться в работу мисс Вокс, даже если кажется что она занимается противоправными действиями. Повторяю ЭТО ПРИКАЗ.]</span></li>
-                </ul>
-            </div>
-        </div>
-    </details>
-
-    <!-- КАРТОЧКА #088-TEMP (ВЗЛОМ / ИГРОК 1) -->
-    <details class="guest-card hacked-card">
-        <summary class="card-header">
-            <div>
-                <span class="id-title">ID: #088-TEMP // [ВНИМАНИЕ: ЗАФИКСИРОВАНО ВНЕД▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓]</span>
-                <span class="intrusion-ok">[Тревога снята. Доброго вечера, Вэнс А.]</span>
-            </div>
-            <span class="card-toggle-icon"></span>
-        </summary>
-        <div class="card-body">
-            <div class="field-row">
-                <span class="field-label">ИМЯ ГОСТЯ:</span>
-                <span class="overwrite-tag">[ДАННЫЕ ПЕРЕЗАПИСАНЫ // ПРОКСИ-ИНЪЕКЦИЯ ПОЛЬЗОВАТЕЛЕМ ████████]</span>
-                <span class="editable-input" contenteditable="true" data-key="guest_088_name">*вписать имя*</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">ОРГАНИЗАЦИЯ:</span> <span class="field-val">International Electric Corporation (IEC) [Берлин]</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">СТАТУС ОПЛАТЫ:</span> <span class="status-ok">ПОДТВЕРЖДЕНО</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">СТАТУС ОРУЖИЯ:</span>
-                <span class="editable-input" contenteditable="true" data-key="guest_088_weapon">—</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">ОСОБЫЕ ОТМЕТКИ:</span>
-                <span class="editable-input" contenteditable="true" data-key="guest_088_notes">—</span>
-            </div>
-        </div>
-    </details>
-
-    <!-- КАРТОЧКА #089-TEMP (ИГРОК 2) -->
-    <details class="guest-card hacked-card">
-        <summary class="card-header">
-            <div>
-                <span class="id-title">ID: #089-TEMP //</span>
-                <span class="guest-preview">IEC [Берлин]</span>
-            </div>
-            <span class="card-toggle-icon"></span>
-        </summary>
-        <div class="card-body">
-            <div class="field-row">
-                <span class="field-label">ИМЯ ГОСТЯ:</span>
-                <span class="editable-input" contenteditable="true" data-key="guest_089_name">*вписать имя*</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">ОРГАНИЗАЦИЯ:</span> <span class="field-val">International Electric Corporation (IEC) [Берлин]</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">СТАТУС ОПЛАТЫ:</span> <span class="status-ok">ПОДТВЕРЖДЕНО</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">СТАТУС ОРУЖИЯ:</span>
-                <span class="editable-input" contenteditable="true" data-key="guest_089_weapon">—</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">ОСОБЫЕ ОТМЕТКИ:</span>
-                <span class="editable-input" contenteditable="true" data-key="guest_089_notes">—</span>
-            </div>
-        </div>
-    </details>
-
-    <!-- КАРТОЧКА #090-TEMP (ИГРОК 3) -->
-    <details class="guest-card hacked-card">
-        <summary class="card-header">
-            <div>
-                <span class="id-title">ID: #090-TEMP //</span>
-                <span class="guest-preview">IEC [Берлин]</span>
-            </div>
-            <span class="card-toggle-icon"></span>
-        </summary>
-        <div class="card-body">
-            <div class="field-row">
-                <span class="field-label">ИМЯ ГОСТЯ:</span>
-                <span class="editable-input" contenteditable="true" data-key="guest_090_name">*вписать имя*</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">ОРГАНИЗАЦИЯ:</span> <span class="field-val">International Electric Corporation (IEC) [Берлин]</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">СТАТУС ОПЛАТЫ:</span> <span class="status-ok">ПОДТВЕРЖДЕНО</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">СТАТУС ОРУЖИЯ:</span>
-                <span class="editable-input" contenteditable="true" data-key="guest_090_weapon">—</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">ОСОБЫЕ ОТМЕТКИ:</span>
-                <span class="editable-input" contenteditable="true" data-key="guest_090_notes">—</span>
-            </div>
-        </div>
-    </details>
-
-    <!-- КАРТОЧКА #091-TEMP (ИГРОК 4) -->
-    <details class="guest-card hacked-card">
-        <summary class="card-header">
-            <div>
-                <span class="id-title">ID: #091-TEMP //</span>
-                <span class="guest-preview">IEC [Берлин]</span>
-            </div>
-            <span class="card-toggle-icon"></span>
-        </summary>
-        <div class="card-body">
-            <div class="field-row">
-                <span class="field-label">ИМЯ ГОСТЯ:</span>
-                <span class="editable-input" contenteditable="true" data-key="guest_091_name">*вписать имя*</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">ОРГАНИЗАЦИЯ:</span> <span class="field-val">International Electric Corporation (IEC) [Берлин]</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">СТАТУС ОПЛАТЫ:</span> <span class="status-ok">ПОДТВЕРЖДЕНО</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">СТАТУС ОРУЖИЯ:</span>
-                <span class="editable-input" contenteditable="true" data-key="guest_091_weapon">—</span>
-            </div>
-            <div class="field-row">
-                <span class="field-label">ОСОБЫЕ ОТМЕТКИ:</span>
-                <span class="editable-input" contenteditable="true" data-key="guest_091_notes">—</span>
-            </div>
-        </div>
-    </details>
-
-    <!-- Нижний лог перехвата -->
-    <div class="override-footer">
-        <div class="log-warn">&gt;&gt; _ВНИМАНИЕ: Попытка отправки рапорта в СБ отеля...</div>
-        <div class="log-err">&gt;&gt; _ОШИБКА: Рапорт перехвачен и удален внешним процессом.</div>
-        <div class="log-caesar">&gt;&gt; _[CAESAR_OVERRIDE]: «Пропустить их. Не мешать».</div>
+    <!-- РАЗДЕЛ 1: ОПИСАНИЕ ИНЦИДЕНТА -->
+    <div class="section-header">
+        <span class="section-title">[ ОПИСАНИЕ ИНЦИДЕНТА ]</span>
     </div>
 
-    <!-- Интерактивный выход -->
-    <div class="eof-bar" onclick="disconnectTerminal()">
-        [КОНЕЦ ФАЙЛА // НАЖМИТЕ ДЛЯ ВЫХОДА ИЗ УЗЛА] <span class="blink">_</span>
+    <div class="incident-box">
+        <p>В 17:50 четверо частных курьеров в экзоскелетах занесли в VIP-ложу №1 (бронь «C. Caesar») черный армейский кофр без маркировки. Потребовали вывести им прямой патч-корд от нашей магистральной оптики в обход роутеров отеля.</p>
+        <p>Как только они воткнули кабель, у меня в серверной выбило предохранители на третьей стойке, а кулеры охлаждения взвыли как турбина ави. Я запустил стандартный пинг и трассировку маршрута, чтобы проверить, не жгут ли они нам линию.</p>
     </div>
-</div>
 
-<!-- Экран после закрытия узла -->
-<div class="disconnect-overlay" id="disconnectScreen" onclick="reconnectTerminal()">
-    <div>[ СЕАНС СВЯЗИ С УЗЛОМ «L’ÉTOILE DORÉE» ЗАВЕРШЕН ]</div>
-    <div style="color: #7f8fa6; font-size: 0.85em; margin-top: 10px;">(Нажмите в любом месте для повторного подключения)</div>
+    <!-- РАЗДЕЛ 2: ДАМП ТРАССИРОВКИ -->
+    <div class="section-header">
+        <span class="section-title">[ ДАМП ТРАССИРОВКИ МАРШРУТА // TRACEROUTE_LOG ]</span>
+    </div>
+
+    <div class="trace-terminal">
+        <div class="cmd-prompt">$ root@etoile-penthouse:~# tracepath -n -p 6660 192.168.0.254</div>
+
+        <div class="hop-list" id="hopList">
+            <div class="hop-row" id="hop1">
+                <span>1: <span class="hop-ip">[192.168.0.1]</span></span>
+                <span class="hop-host">L_Etoile_40F_Switch</span>
+                <span class="hop-dots"></span>
+                <span class="hop-time">0.412 ms</span>
+            </div>
+            <div class="hop-row" id="hop2">
+                <span>2: <span class="hop-ip">[10.44.12.08]</span></span>
+                <span class="hop-host">Marina_Substation_B</span>
+                <span class="hop-dots"></span>
+                <span class="hop-time">1.105 ms</span>
+            </div>
+            <div class="hop-row" id="hop3">
+                <span>3: <span class="hop-ip">[172.16.0.00]</span></span>
+                <span class="hop-err">[ОШИБКА: УЗЕЛ НЕ В РЕЕСТРЕ NETWATCH]</span>
+            </div>
+            <div class="hop-row" id="hop4">
+                <span>4: <span class="hop-ip">[000.00.0.00]</span></span>
+                <span class="hop-darpa">[ПРОТОКОЛ СТАРОЙ СЕТИ: D.A.R.P.A_v2]</span>
+            </div>
+        </div>
+
+        <div class="trace-warnings">
+            <div>&gt;&gt; ВНИМАНИЕ: Спутниковый шлюз проигнорирован!</div>
+            <div>&gt;&gt; Маршрут: Заброшенный коллектор связи №19 [Год постройки: 2018].</div>
+            <div>&gt;&gt; Вектор направления: ЦЕНТРАЛЬНЫЙ РАЙОН -&gt; СЕКТОР "GROUND ZERO"</div>
+            <div>&gt;&gt; Конечный терминал: <span class="rad-hazard">[ДАННЫЕ ИСКАЖЕНЫ РАДИАЦИОННЫМ ФОНОМ // 420 R/h]</span></div>
+        </div>
+
+        <div class="overheat-box">
+            <div style="color: var(--red); font-weight: bold;">$ [CRITICAL ALERT]: Встречный импульс из коллектора!</div>
+            <div id="tempReadout">$ Температура чипа кибердеки техника: <strong>78°C... 89°C... 104°C!</strong></div>
+            <div style="color: var(--amber); font-weight: bold;">$ ПРИНУДИТЕЛЬНЫЙ РАЗРЫВ СОЕДИНЕНИЯ (Аварийный отстрел кабеля).</div>
+            <div class="temp-gauge-wrap">
+                <div class="temp-gauge-bar" id="tempBar"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- РАЗДЕЛ 3: КОММЕНТАРИИ К ТИКЕТУ -->
+    <div class="section-header">
+        <span class="section-title">[ КОММЕНТАРИИ К ТИКЕТУ ]</span>
+    </div>
+
+    <div class="comments-list">
+        <!-- Комментарий 1 -->
+        <div class="comment-card">
+            <div class="comment-header">
+                <span class="c-author-tech">[18:22] Гленн Мартинес (IT-отдел):</span>
+                <span class="c-time">ID: STAFF_409</span>
+            </div>
+            <blockquote class="comment-quote">
+                Вы там рехнулись на ресепшене?! Эта штука в Ложе №1 тянет гигабайты по мертвым подземным проводам прямиком из-под радиоактивных руин башни Арасаки! Когда я попытался просканировать порт, в наушниках затрещал счетчик Гейгера, кто-то прошептал мои детские пароли, а моя дека расплавила пластик на столе! Я вызываю инспекторов Сетевого Дозора!
+            </blockquote>
+        </div>
+
+        <!-- Комментарий 2 -->
+        <div class="comment-card boss-card">
+            <div class="comment-header">
+                <span class="c-author-boss">[18:24] Артур Вэнс [Управляющий отелем]:</span>
+                <span class="c-time">OVERRIDE_AUTH: EXECUTIVE</span>
+            </div>
+            <blockquote class="comment-quote">
+                Мартинес, закрой рот и даже не вздумай обращаться в NetWatch. Нам только что перевели 15% акций городского водоканала за то, чтобы этот кабель лежал там до полуночи.
+            </blockquote>
+        </div>
+
+        <!-- Комментарий 3 -->
+        <div class="comment-card">
+            <div class="comment-header">
+                <span class="c-author-tech">[18:26] Гленн Мартинес (IT-отдел):</span>
+                <span class="c-time">ID: STAFF_409</span>
+            </div>
+            <blockquote class="comment-quote">
+                Но сэр, по кабелю из первой ложи только что прошел вторичный скрытый пакет в сторону Пасифики! Эта тварь в кейсе сканирует импланты всех гостей в зале через наш Дата Пул! Она кого-то ждет!
+            </blockquote>
+        </div>
+
+        <!-- Комментарий 4 (Системный) -->
+        <div class="comment-card sys-kill-card">
+            <div class="comment-header">
+                <span class="c-author-sys">[18:27] СИСТЕМНОЕ УВЕДОМЛЕНИЕ:</span>
+                <span class="c-time">KERNEL_EVENT // 0xCAESAR</span>
+            </div>
+            <blockquote class="comment-quote">
+                Пользователь <strong>[Гленн Мартинес]</strong> отключен от сети (Причина: Остановка кардио-импланта // Код ошибки: <strong>0xCAESAR</strong>).<br>
+                Тикет переведен в статус «Решено». Удаление лога через 6 часов.
+            </blockquote>
+        </div>
+    </div>
+
+    <!-- Подвал с живым таймером -->
+    <div class="purge-footer">
+        <span>[ АВТОМАТИЧЕСКАЯ ЗАЧИСТКА ДАМПА ПАМЯТИ ]</span>
+        <span>ОСТАЛОСЬ ВРЕМЕНИ: <span class="timer-val" id="purgeTimer">05:59:59</span></span>
+    </div>
+
 </div>
 
 <script>
-    // Кнопка "Развернуть все / Свернуть все"
-    let allExpanded = false;
-    function toggleAllCards() {
-        const cards = document.querySelectorAll('details.guest-card');
-        allExpanded = !allExpanded;
-        cards.forEach(card => card.open = allExpanded);
-        document.getElementById('toggleAllBtn').textContent = allExpanded ? 'Свернуть все' : 'Развернуть все';
+    const consoleBox = document.getElementById('sysConsole');
+
+    function showConsoleMessage(htmlContent, borderColor = 'var(--amber)') {
+        consoleBox.style.display = 'block';
+        consoleBox.style.borderColor = borderColor;
+        consoleBox.innerHTML = htmlContent;
     }
 
-    // Сохранение вписанных имен игроков в браузере (localStorage)
-    document.querySelectorAll('.editable-input').forEach(el => {
-        const key = el.getAttribute('data-key');
-        const saved = localStorage.getItem(key);
-        if (saved !== null) {
-            el.textContent = saved;
-        }
-        el.addEventListener('input', () => {
-            localStorage.setItem(key, el.textContent);
+    // 1. Эмуляция трассировки и скачка температуры
+    function replayTrace() {
+        const hops = ['hop1', 'hop2', 'hop3', 'hop4'];
+        const tempBar = document.getElementById('tempBar');
+        const tempReadout = document.getElementById('tempReadout');
+        const term = document.getElementById('mainTerminal');
+
+        tempBar.style.width = '15%';
+        tempReadout.innerHTML = '$ Повторный опрос маршрута 192.168.0.254... Нагрев чипа: <strong>45°C</strong>';
+
+        showConsoleMessage(
+            '<span style="color: var(--green);">&gt;&gt; ВЫПОЛНЯЕТСЯ TRACEPATH...</span> Опрос узлов от коммутатора 40-го этажа до сектора "GROUND ZERO"...',
+            'var(--green)'
+        );
+
+        hops.forEach((id, idx) => {
+            const el = document.getElementById(id);
+            el.style.opacity = '0.2';
+            setTimeout(() => {
+                el.style.opacity = '1';
+                el.style.backgroundColor = 'rgba(255, 176, 0, 0.12)';
+                setTimeout(() => el.style.backgroundColor = 'transparent', 400);
+
+                if (idx === 2) {
+                    tempBar.style.width = '75%';
+                    tempReadout.innerHTML = '$ Температура чипа кибердеки техника: <strong>78°C... 89°C...</strong>';
+                }
+                if (idx === 3) {
+                    tempBar.style.width = '100%';
+                    tempReadout.innerHTML = '$ Температура чипа кибердеки техника: <strong>78°C... 89°C... 104°C! [КРИТИЧЕСКИЙ ПЕРЕГРЕВ]</strong>';
+                    term.classList.remove('shake-active');
+                    void term.offsetWidth;
+                    term.classList.add('shake-active');
+                }
+            }, (idx + 1) * 350);
         });
-    });
+    }
 
-    // Эффект выхода из терминала
-    function disconnectTerminal() {
-        document.getElementById('disconnectScreen').style.display = 'flex';
+    // 2. Пинг кардио-импланта Мартинеса
+    function pingBiometrics() {
+        showConsoleMessage(
+            '<div style="color: var(--cyan); font-weight: bold;">&gt;&gt; ЗАПРОС БИОМЕТРИИ СОТРУДНИКА [STAFF_409 // ГЛЕНН МАРТИНЕС]:</div>' +
+            '<div>• Кардио-монитор BioDyne Mk.IV: <span style="color: var(--red); font-weight: bold;">0 BPM (АСИСТОЛИЯ)</span></div>' +
+            '<div>• Нейролинк: <span style="color: var(--amber);">ВЫГОРАНИЕ ШИНЫ ДАННЫХ (Температура в момент смерти: 104.2°C)</span></div>' +
+            '<div>• Последняя сигнатура в буфере памяти: <span style="color: var(--red); font-weight: bold;">0xCAESAR</span></div>',
+            'var(--cyan)'
+        );
     }
-    function reconnectTerminal() {
-        document.getElementById('disconnectScreen').style.display = 'none';
+
+    // 3. Замер радиации коллектора №19
+    function scanRadiation() {
+        showConsoleMessage(
+            '<div style="color: var(--amber); font-weight: bold;">&gt;&gt; ТЕЛЕМЕТРИЯ КОЛЛЕКТОРА СВЯЗИ №19 [СЕКТОР "GROUND ZERO"]:</div>' +
+            '<div>• Мощность дозы гамма-излучения на оптоволоконном узле: <span style="color: var(--red); font-weight: bold;">420.8 R/h</span></div>' +
+            '<div>• Статус линии: <span style="color: var(--green);">АКТИВНЫЙ ОБМЕН ПАКЕТАМИ (14.8 Гбит/с -> VIP-ложа №1)</span></div>' +
+            '<div>• Вторичный вектор: <span style="color: var(--amber);">Скрытая ретрансляция в локальный Data Pool Пасифики</span></div>',
+            'var(--amber)'
+        );
     }
+
+    // 4. Попытка отправить дамп в NetWatch
+    function escalateNetwatch() {
+        const term = document.getElementById('mainTerminal');
+        term.classList.remove('shake-active');
+        void term.offsetWidth;
+        term.classList.add('shake-active');
+
+        showConsoleMessage(
+            '<div style="color: var(--red); font-weight: bold;">&gt;&gt; [ОШИБКА ДОСТУПА // ПЕРЕХВАТ ПАКЕТА]:</div>' +
+            '<div>Попытка соединения с экстренным шлюзом NetWatch заблокирована локальным прокси отеля.</div>' +
+            '<div style="color: var(--amber); margin-top: 4px;">[ПРОТОКОЛ 0xCAESAR]: «Ваша активность зафиксирована. Оставайтесь на своем рабочем месте».</div>',
+            'var(--red)'
+        );
+    }
+
+    // Живой обратный отсчет 6 часов
+    let totalSeconds = 6 * 3600 - 1;
+    setInterval(() => {
+        if (totalSeconds > 0) totalSeconds--;
+        const h = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+        const m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+        const s = String(totalSeconds % 60).padStart(2, '0');
+        document.getElementById('purgeTimer').textContent = `${h}:${m}:${s}`;
+    }, 1000);
 </script>
 
 </body>
