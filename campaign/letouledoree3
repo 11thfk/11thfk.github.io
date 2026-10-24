@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>КОНСЬЕРЖ_УРОВЕНЬ_2 // СПИСОК_ГОСТЕЙ_2045.dat</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #080a0f;
+            color: #d1d8e0;
+            font-family: 'Consolas', 'Courier New', Courier, monospace;
+            font-size: 15px;
+            line-height: 1.5;
+            padding: 20px;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .terminal {
+            background-color: #10141d;
+            border: 1px solid #263142;
+            border-radius: 6px;
+            padding: 28px;
+            max-width: 880px;
+            width: 100%;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.9);
+            position: relative;
+        }
+
+        /* Верхняя строка загрузки с резиновым отточием */
+        .decrypt-bar {
+            display: flex;
+            align-items: baseline;
+            color: #00ff9d;
+            font-weight: bold;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .decrypt-dots {
+            flex-grow: 1;
+            border-bottom: 2px dotted #00ff9d;
+            min-width: 30px;
+            opacity: 0.5;
+        }
+
+        .access-badge {
+            display: inline-block;
+            background-color: rgba(255, 215, 0, 0.1);
+            border: 1px solid #ffd700;
+            color: #ffd700;
+            font-weight: bold;
+            padding: 4px 12px;
+            border-radius: 3px;
+            margin-bottom: 18px;
+            text-shadow: 0 0 6px rgba(255, 215, 0, 0.3);
+        }
+
+        /* Системные логи в шапке */
+        .sys-logs {
+            background-color: #0c0f16;
+            border-left: 3px solid #00e5ff;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+
+        .sys-logs div {
+            margin-bottom: 4px;
+            color: #00e5ff;
+        }
+
+        .sys-logs div:last-child {
+            margin-bottom: 0;
+        }
+
+        .sys-logs .warning {
+            color: #ff9f1a;
+            font-weight: bold;
+        }
+
+        /* Панель управления списком */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .toolbar-hint {
+            color: #7f8fa6;
+            font-size: 0.9em;
+            font-style: italic;
+        }
+
+        .btn-toggle-all {
+            background-color: rgba(0, 229, 255, 0.08);
+            color: #00e5ff;
+            border: 1px solid rgba(0, 229, 255, 0.35);
+            font-family: inherit;
+            font-size: 0.85em;
+            padding: 5px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-toggle-all:hover {
+            background-color: rgba(0, 229, 255, 0.2);
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.25);
+        }
+
+        /* Карточки гостей */
+        details.guest-card {
+            background-color: #141923;
+            border: 1px solid #263042;
+            border-radius: 4px;
+            margin-bottom: 14px;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        details.guest-card:hover {
+            border-color: #3b4b66;
+        }
+
+        details.guest-card[open] {
+            background-color: #121720;
+            border-color: #00e5ff;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.08);
+        }
+
+        /* Особое оформление для VIP и Взломанных карт */
+        details.guest-card.vip-card[open] {
+            border-color: #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.12);
+        }
+
+        details.guest-card.hacked-card {
+            border-color: #4a2333;
+            background-color: #161219;
+        }
+
+        details.guest-card.hacked-card[open] {
+            border-color: #ff3860;
+            box-shadow: 0 0 15px rgba(255, 56, 96, 0.15);
+        }
+
+        summary.card-header {
+            padding: 13px 16px;
+            cursor: pointer;
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            user-select: none;
+            font-weight: bold;
+        }
+
+        summary.card-header::-webkit-details-marker {
+            display: none;
+        }
+
+        summary.card-header:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+        }
+
+        .id-title {
+            color: #00e5ff;
+            word-break: break-word;
+        }
+
+        .vip-card .id-title {
+            color: #ffd700;
+        }
+
+        .hacked-card .id-title {
+            color: #ff3860;
+        }
+
+        .guest-preview {
+            color: #a4b0be;
+            font-weight: normal;
+            font-size: 0.92em;
+            margin-left: 8px;
+        }
+
+        .card-toggle-icon {
+            font-size: 0.8em;
+            color: #7f8fa6;
+            border: 1px solid #354154;
+            padding: 2px 8px;
+            border-radius: 3px;
+            flex-shrink: 0;
+        }
+
+        details.guest-card[open] .card-toggle-icon::after {
+            content: "− СВЕРНУТЬ";
+        }
+
+        details.guest-card:not([open]) .card-toggle-icon::after {
+            content: "+ ОТКРЫТЬ";
+        }
+
+        .card-body {
+            padding: 14px 18px 18px 18px;
+            border-top: 1px dashed #263042;
+            animation: fadeIn 0.2s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Строки данных внутри карточки */
+        .field-row {
+            margin-bottom: 10px;
+        }
+
+        .field-label {
+            color: #70a1ff;
+            font-weight: bold;
+        }
+
+        .field-val {
+            color: #f1f2f6;
+        }
+
+        .status-ok {
+            color: #00ff9d;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            color: #ff9f1a;
+            font-weight: bold;
+        }
+
+        /* Комментарии и правки Артура Вэнса */
+        .vance-edit {
+            display: inline-block;
+            background-color: rgba(255, 159, 26, 0.1);
+            border: 1px solid rgba(255, 159, 26, 0.4);
+            color: #ffbe76;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 0.92em;
+            margin-top: 4px;
+        }
+
+        .sec-tag {
+            display: inline-block;
+            background-color: rgba(255, 56, 96, 0.15);
+            border: 1px solid #ff3860;
+            color: #ff6b81;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 0.88em;
+            font-weight: bold;
+        }
+
+        .weapon-warn {
+            color: #ff5252;
+            font-weight: bold;
+        }
+
+        /* Списки особых отметок */
+        .notes-list {
+            margin: 6px 0 0 0;
+            padding-left: 20px;
+            color: #dfe4ea;
+        }
+
+        .notes-list li {
+            margin-bottom: 6px;
+        }
+
+        /* Оформление инъекции и редактируемых полей игроков */
+        .intrusion-ok {
+            color: #00ff9d;
+            font-weight: normal;
+        }
+
+        .overwrite-tag {
+            color: #ff6b81;
+            background-color: rgba(255, 56, 96, 0.12);
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin-right: 6px;
+        }
+
+        .editable-input {
+            display: inline-block;
+            min-width: 160px;
+            color: #00ff9d;
+            background-color: rgba(0, 255, 157, 0.07);
+            border-bottom: 1px dashed #00ff9d;
+            padding: 1px 8px;
+            border-radius: 2px;
+            outline: none;
+            cursor: text;
+        }
+
+        .editable-input:focus {
+            background-color: rgba(0, 255, 157, 0.15);
+            box-shadow: 0 0 8px rgba(0, 255, 157, 0.3);
+        }
+
+        /* Нижний блок перехвата Caesar */
+        .override-footer {
+            margin-top: 24px;
+            background-color: #140d12;
+            border: 1px solid #ff3860;
+            border-left: 4px solid #ff3860;
+            padding: 14px 18px;
+            border-radius: 4px;
+        }
+
+        .override-footer div {
+            margin-bottom: 6px;
+        }
+
+        .override-footer div:last-child {
+            margin-bottom: 0;
+        }
+
+        .log-warn { color: #ff9f1a; }
+        .log-err { color: #ff5252; font-weight: bold; }
+        .log-caesar {
+            color: #00ff9d;
+            font-weight: bold;
+            text-shadow: 0 0 6px rgba(0, 255, 157, 0.4);
+        }
+
+        /* Кнопка выхода из узла */
+        .eof-bar {
+            margin-top: 22px;
+            text-align: center;
+            padding: 12px;
+            background-color: #0b0e14;
+            border: 1px dashed #3d4852;
+            color: #7f8fa6;
+            font-weight: bold;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.2s ease;
+        }
+
+        .eof-bar:hover {
+            color: #ffffff;
+            border-color: #00e5ff;
+            text-shadow: 0 0 6px rgba(0, 229, 255, 0.5);
+        }
+
+        .blink {
+            animation: blinker 1.2s linear infinite;
+        }
+
+        @keyframes blinker {
+            50% { opacity: 0; }
+        }
+
+        /* Экран отключения при выходе */
+        .disconnect-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background-color: #05070a;
+            color: #00ff9d;
+            z-index: 999;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            cursor: pointer;
+        }
+
+        /* Адаптация под мобильные экраны */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+                font-size: 13.5px;
+            }
+            .terminal {
+                padding: 16px;
+            }
+            summary.card-header {
+                padding: 11px 12px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+            .card-toggle-icon {
+                align-self: flex-end;
+            }
+            .card-body {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="terminal">
+    <!-- Шапка расшифровки с резиновым отточием -->
+    <div class="decrypt-bar">
+        <span>[РАСШИФРОВКА: СПИСОК_ГОСТЕЙ_2045.dat]</span>
+        <span class="decrypt-dots"></span>
+        <span>[100% ЗАВЕРШЕНО]</span>
+    </div>
+
+    <div class="access-badge">[УРОВЕНЬ ДОСТУПА: КОНСЬЕРЖ_УРОВЕНЬ_2]</div>
+
+    <div class="sys-logs">
+        <div>&gt;&gt; ЗАГРУЗКА РЕЕСТРА ГОСТЕЙ: ФОНД «ВОЗРОЖДЕНИЕ НАЙТ-СИТИ»</div>
+        <div>&gt;&gt; ДАТА: 14.11.2045 // ЛОКАЦИЯ: «L’ÉTOILE DORÉE» ПЕНТХАУС (ЭТАЖ 40)</div>
+        <div class="warning">&gt;&gt; ВНИМАНИЕ: Обнаружены поврежденные сектора памяти [0x88F4A]...</div>
+    </div>
+
+    <div class="toolbar">
+        <span class="toolbar-hint">* Нажмите на строку гостя для просмотра карточки (поля #088–#091 можно редактировать)</span>
+        <button class="btn-toggle-all" id="toggleAllBtn" onclick="toggleAllCards()">Развернуть все</button>
+    </div>
+
+    <!-- КАРТОЧКА #001-VIP (теперь закрыта по умолчанию) -->
+    <details class="guest-card vip-card">
+        <summary class="card-header">
+            <div>
+                <span class="id-title">ID: #001-VIP // ЛОЖА №1</span>
+                <span class="guest-preview">— C. Caesar</span>
+            </div>
+            <span class="card-toggle-icon"></span>
+        </summary>
+        <div class="card-body">
+            <div class="field-row">
+                <span class="field-label">ИМЯ ГОСТЯ:</span> <span class="field-val">C. Caesar</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">ОРГАНИЗАЦИЯ:</span> <span class="field-val">Трастовый фонд «Rubicon» (Цюрих / Свободная Европейская зона)</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">СТАТУС ОПЛАТЫ:</span> <span class="status-ok">ПОДТВЕРЖДЕНО</span><br>
+                <span class="vance-edit">[РЕДАКТИРОВАНО СОТРУДНИКОМ: ARTHUR_VANCE. КОММЕНТАРИЙ: Бартерный перевод: 15% акций Муниципального Водоканала Найт-Сити -&gt; Артур Вэнс. «L’ÉTOILE DORÉE»]</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">ОСОБЫЕ ОТМЕТКИ:</span>
+                <ul class="notes-list">
+                    <li>В ложу доставлен автономный терминал связи.</li>
+                    <li>Охрана периметра: 2х Соло [Контракт с «Lazarus Group», оплачено авансом].</li>
+                    <li><span class="weapon-warn">Не входить. Не стучать. Оптоволоконный кабель на полу НЕ трогать.</span></li>
+                </ul>
+            </div>
+        </div>
+    </details>
+
+    <!-- КАРТОЧКА #014-CORP -->
+    <details class="guest-card">
+        <summary class="card-header">
+            <div>
+                <span class="id-title">ID: #014-CORP // ТЕРРАСА / БАР</span>
+                <span class="guest-preview">— Вайс, Маркус</span>
+            </div>
+            <span class="card-toggle-icon"></span>
+        </summary>
+        <div class="card-body">
+            <div class="field-row">
+                <span class="field-label">ИМЯ ГОСТЯ:</span> <span class="field-val">Вайс, Маркус</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">ОРГАНИЗАЦИЯ:</span> <span class="field-val">Embrace Group // Вице-президент</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">СТАТУС ОПЛАТЫ:</span> <span class="status-ok">ПОДТВЕРЖДЕНО</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">СТАТУС ОРУЖИЯ:</span> <span class="field-val">Сдано в сейф охраны №04 [Тяжелый пистолет «Militech Avenger»]</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">ОСОБЫЕ ОТМЕТКИ:</span>
+                <ul class="notes-list">
+                    <li>Подавать ТОЛЬКО чистый бурбон «Old Kentucky». Двойная порция.</li>
+                    <li>Счет закрывать за счет заведения — клиент на грани нервного срыва после инцидента в Пасифике.</li>
+                    <li>Держать подальше от делегации Continental Brands во избежание драки.</li>
+                </ul>
+            </div>
+        </div>
+    </details>
+
+    <!-- КАРТОЧКА #019-CORP -->
+    <details class="guest-card">
+        <summary class="card-header">
+            <div>
+                <span class="id-title">ID: #019-CORP // ГЛАВНЫЙ ЗАЛ</span>
+                <span class="guest-preview">— Дюран, Эвелин</span>
+            </div>
+            <span class="card-toggle-icon"></span>
+        </summary>
+        <div class="card-body">
+            <div class="field-row">
+                <span class="field-label">ИМЯ ГОСТЯ:</span> <span class="field-val">Дюран, Эвелин</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">ОРГАНИЗАЦИЯ:</span> <span class="field-val">Continental Brands // Глава Research &amp; Development</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">СТАТУС ОПЛАТЫ:</span> <span class="status-ok">ПОДТВЕРЖДЕНО</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">СТАТУС ОРУЖИЯ:</span> <span class="field-val">Чисто</span> <span class="weapon-warn">[ВНИМАНИЕ: Сканер засек скрытый имплант «Когти», допущена по VIP-регламенту]</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">ОСОБЫЕ ОТМЕТКИ:</span>
+                <ul class="notes-list">
+                    <li>Игристое «Château Delamain» открывать СТРОГО в ее присутствии!</li>
+                    <li>Клиент проявляет симптомы острой паранойи: требует проверять бокалы на нейротоксины.</li>
+                </ul>
+            </div>
+        </div>
+    </details>
+
+    <!-- КАРТОЧКА #042-SOC -->
+    <details class="guest-card">
+        <summary class="card-header">
+            <div>
+                <span class="id-title">ID: #042-SOC // ФОНТАНЫ</span>
+                <span class="guest-preview">— Вокс, Марион («Милли»)</span>
+            </div>
+            <span class="card-toggle-icon"></span>
+        </summary>
+        <div class="card-body">
+            <div class="field-row">
+                <span class="field-label">ИМЯ ГОСТЯ:</span> <span class="field-val">Вокс, Марион</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">ОРГАНИЗАЦИЯ:</span> <span class="field-val">Независимый медиа-консультант NIGHT-CITY INQUIRER POST</span> <span class="sec-tag">[ТЭГ СБ: ЭЛИТНЫЙ ФИКСЕР]</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">СТАТУС ОПЛАТЫ:</span> <span class="status-pending">ОЖИДАЕТ ОПЛАТЫ</span><br>
+                <span class="vance-edit">[РЕДАКТИРОВАНО СОТРУДНИКОМ: ARTHUR_VANCE. КОММЕНТАРИЙ: пропустить в любом случае]</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">СТАТУС ОРУЖИЯ:</span> <span class="field-val">Сдано в сейф охраны №11 [Стилет с мономолекулярной заточкой]</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">ОСОБЫЕ ОТМЕТКИ:</span>
+                <ul class="notes-list">
+                    <li>Просьба называть консультанта по её уличному имени «Милли».</li>
+                    <li>Свободный доступ ко всем столам, кроме Ложи №1.</li>
+                    <li><span class="vance-edit">[ДОБАВЛЕНО СОТРУДНИКОМ: ARTHUR_VANCE. КОММЕНТАРИЙ: Приказ СБ не вмешиваться в работу мисс Вокс, даже если кажется что она занимается противоправными действиями. Повторяю ЭТО ПРИКАЗ.]</span></li>
+                </ul>
+            </div>
+        </div>
+    </details>
+
+    <!-- КАРТОЧКА #088-TEMP (ВЗЛОМ / ИГРОК 1) -->
+    <details class="guest-card hacked-card">
+        <summary class="card-header">
+            <div>
+                <span class="id-title">ID: #088-TEMP // [ВНИМАНИЕ: ЗАФИКСИРОВАНО ВНЕД▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓]</span>
+                <span class="intrusion-ok">[Тревога снята. Доброго вечера, Вэнс А.]</span>
+            </div>
+            <span class="card-toggle-icon"></span>
+        </summary>
+        <div class="card-body">
+            <div class="field-row">
+                <span class="field-label">ИМЯ ГОСТЯ:</span>
+                <span class="overwrite-tag">[ДАННЫЕ ПЕРЕЗАПИСАНЫ // ПРОКСИ-ИНЪЕКЦИЯ ПОЛЬЗОВАТЕЛЕМ ████████]</span>
+                <span class="editable-input" contenteditable="true" data-key="guest_088_name">*вписать имя*</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">ОРГАНИЗАЦИЯ:</span> <span class="field-val">International Electric Corporation (IEC) [Берлин]</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">СТАТУС ОПЛАТЫ:</span> <span class="status-ok">ПОДТВЕРЖДЕНО</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">СТАТУС ОРУЖИЯ:</span>
+                <span class="editable-input" contenteditable="true" data-key="guest_088_weapon">—</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">ОСОБЫЕ ОТМЕТКИ:</span>
+                <span class="editable-input" contenteditable="true" data-key="guest_088_notes">—</span>
+            </div>
+        </div>
+    </details>
+
+    <!-- КАРТОЧКА #089-TEMP (ИГРОК 2) -->
+    <details class="guest-card hacked-card">
+        <summary class="card-header">
+            <div>
+                <span class="id-title">ID: #089-TEMP //</span>
+                <span class="guest-preview">IEC [Берлин]</span>
+            </div>
+            <span class="card-toggle-icon"></span>
+        </summary>
+        <div class="card-body">
+            <div class="field-row">
+                <span class="field-label">ИМЯ ГОСТЯ:</span>
+                <span class="editable-input" contenteditable="true" data-key="guest_089_name">*вписать имя*</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">ОРГАНИЗАЦИЯ:</span> <span class="field-val">International Electric Corporation (IEC) [Берлин]</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">СТАТУС ОПЛАТЫ:</span> <span class="status-ok">ПОДТВЕРЖДЕНО</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">СТАТУС ОРУЖИЯ:</span>
+                <span class="editable-input" contenteditable="true" data-key="guest_089_weapon">—</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">ОСОБЫЕ ОТМЕТКИ:</span>
+                <span class="editable-input" contenteditable="true" data-key="guest_089_notes">—</span>
+            </div>
+        </div>
+    </details>
+
+    <!-- КАРТОЧКА #090-TEMP (ИГРОК 3) -->
+    <details class="guest-card hacked-card">
+        <summary class="card-header">
+            <div>
+                <span class="id-title">ID: #090-TEMP //</span>
+                <span class="guest-preview">IEC [Берлин]</span>
+            </div>
+            <span class="card-toggle-icon"></span>
+        </summary>
+        <div class="card-body">
+            <div class="field-row">
+                <span class="field-label">ИМЯ ГОСТЯ:</span>
+                <span class="editable-input" contenteditable="true" data-key="guest_090_name">*вписать имя*</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">ОРГАНИЗАЦИЯ:</span> <span class="field-val">International Electric Corporation (IEC) [Берлин]</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">СТАТУС ОПЛАТЫ:</span> <span class="status-ok">ПОДТВЕРЖДЕНО</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">СТАТУС ОРУЖИЯ:</span>
+                <span class="editable-input" contenteditable="true" data-key="guest_090_weapon">—</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">ОСОБЫЕ ОТМЕТКИ:</span>
+                <span class="editable-input" contenteditable="true" data-key="guest_090_notes">—</span>
+            </div>
+        </div>
+    </details>
+
+    <!-- КАРТОЧКА #091-TEMP (ИГРОК 4) -->
+    <details class="guest-card hacked-card">
+        <summary class="card-header">
+            <div>
+                <span class="id-title">ID: #091-TEMP //</span>
+                <span class="guest-preview">IEC [Берлин]</span>
+            </div>
+            <span class="card-toggle-icon"></span>
+        </summary>
+        <div class="card-body">
+            <div class="field-row">
+                <span class="field-label">ИМЯ ГОСТЯ:</span>
+                <span class="editable-input" contenteditable="true" data-key="guest_091_name">*вписать имя*</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">ОРГАНИЗАЦИЯ:</span> <span class="field-val">International Electric Corporation (IEC) [Берлин]</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">СТАТУС ОПЛАТЫ:</span> <span class="status-ok">ПОДТВЕРЖДЕНО</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">СТАТУС ОРУЖИЯ:</span>
+                <span class="editable-input" contenteditable="true" data-key="guest_091_weapon">—</span>
+            </div>
+            <div class="field-row">
+                <span class="field-label">ОСОБЫЕ ОТМЕТКИ:</span>
+                <span class="editable-input" contenteditable="true" data-key="guest_091_notes">—</span>
+            </div>
+        </div>
+    </details>
+
+    <!-- Нижний лог перехвата -->
+    <div class="override-footer">
+        <div class="log-warn">&gt;&gt; _ВНИМАНИЕ: Попытка отправки рапорта в СБ отеля...</div>
+        <div class="log-err">&gt;&gt; _ОШИБКА: Рапорт перехвачен и удален внешним процессом.</div>
+        <div class="log-caesar">&gt;&gt; _[CAESAR_OVERRIDE]: «Пропустить их. Не мешать».</div>
+    </div>
+
+    <!-- Интерактивный выход -->
+    <div class="eof-bar" onclick="disconnectTerminal()">
+        [КОНЕЦ ФАЙЛА // НАЖМИТЕ ДЛЯ ВЫХОДА ИЗ УЗЛА] <span class="blink">_</span>
+    </div>
+</div>
+
+<!-- Экран после закрытия узла -->
+<div class="disconnect-overlay" id="disconnectScreen" onclick="reconnectTerminal()">
+    <div>[ СЕАНС СВЯЗИ С УЗЛОМ «L’ÉTOILE DORÉE» ЗАВЕРШЕН ]</div>
+    <div style="color: #7f8fa6; font-size: 0.85em; margin-top: 10px;">(Нажмите в любом месте для повторного подключения)</div>
+</div>
+
+<script>
+    // Кнопка "Развернуть все / Свернуть все"
+    let allExpanded = false;
+    function toggleAllCards() {
+        const cards = document.querySelectorAll('details.guest-card');
+        allExpanded = !allExpanded;
+        cards.forEach(card => card.open = allExpanded);
+        document.getElementById('toggleAllBtn').textContent = allExpanded ? 'Свернуть все' : 'Развернуть все';
+    }
+
+    // Сохранение вписанных имен игроков в браузере (localStorage)
+    document.querySelectorAll('.editable-input').forEach(el => {
+        const key = el.getAttribute('data-key');
+        const saved = localStorage.getItem(key);
+        if (saved !== null) {
+            el.textContent = saved;
+        }
+        el.addEventListener('input', () => {
+            localStorage.setItem(key, el.textContent);
+        });
+    });
+
+    // Эффект выхода из терминала
+    function disconnectTerminal() {
+        document.getElementById('disconnectScreen').style.display = 'flex';
+    }
+    function reconnectTerminal() {
+        document.getElementById('disconnectScreen').style.display = 'none';
+    }
+</script>
+
+</body>
+</html>
