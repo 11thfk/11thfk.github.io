@@ -3,666 +3,329 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SysTrack v4.02 // #ERR-9940-VIP</title>
+    <title>MILITECH / ARASAKA // CAESAR-IV [DV 12]</title>
     <style>
         * {
             box-sizing: border-box;
         }
 
         :root {
-            --bg-main: #0c0b09;
-            --bg-panel: #14120f;
-            --bg-card: #1b1814;
-            --amber: #ffb000;
-            --amber-dim: #9e6d00;
-            --green: #2ee66b;
-            --red: #ff2e3b;
-            --cyan: #00e1d9;
-            --text-main: #e6dfd5;
-            --text-muted: #8c8275;
-            --border-ind: #332d24;
+            --bg-color: #050709;
+            --panel-bg: #0b0f14;
+            --border-color: #3b4d66;
+            --accent-green: #00ff66;
+            --accent-red: #ff2233;
+            --accent-amber: #ffaa00;
+            --text-main: #c0d1d6;
+            --text-muted: #5e7987;
         }
 
         body {
-            background-color: var(--bg-main);
+            background-color: var(--bg-color);
             background-image: 
-                radial-gradient(rgba(255, 176, 0, 0.03) 1px, transparent 0),
-                linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.8));
-            background-size: 20px 20px, 100% 100%;
+                linear-gradient(rgba(0, 255, 102, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 255, 102, 0.02) 1px, transparent 1px);
+            background-size: 16px 16px;
             color: var(--text-main);
-            font-family: 'Consolas', 'Lucida Console', 'Courier New', monospace;
-            font-size: 15px;
-            line-height: 1.55;
-            padding: 20px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            padding: 15px;
             margin: 0;
             display: flex;
             justify-content: center;
         }
 
-        /* Эффект легкой тряски при перегреве */
-        @keyframes glitchShake {
-            0%, 100% { transform: translate(0, 0); }
-            20% { transform: translate(-3px, 1px); }
-            40% { transform: translate(3px, -1px); }
-            60% { transform: translate(-2px, -2px); }
-            80% { transform: translate(2px, 2px); }
-        }
-
-        .shake-active {
-            animation: glitchShake 0.35s ease-in-out 2;
-        }
-
-        .systrack-container {
-            background-color: var(--bg-panel);
-            border: 2px solid var(--border-ind);
-            border-top: 4px solid var(--amber);
-            border-radius: 4px;
-            max-width: 900px;
+        .terminal-wrapper {
+            background-color: var(--panel-bg);
+            border: 3px double var(--accent-green);
+            max-width: 920px;
             width: 100%;
-            padding: 26px 30px;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.95);
+            padding: 20px;
+            box-shadow: 0 0 25px rgba(0, 255, 102, 0.15);
             position: relative;
         }
 
-        /* Верхний индустриальный заголовок (вместо ломающихся # ===) */
-        .sys-banner {
-            background-color: rgba(255, 176, 0, 0.06);
-            border-top: 2px dashed var(--amber);
-            border-bottom: 2px dashed var(--amber);
-            padding: 14px 16px;
-            margin-bottom: 22px;
-            color: var(--amber);
+        /* Шапка в стиле ASCII-брутализма */
+        .ascii-header {
+            color: var(--accent-green);
             font-weight: bold;
-            letter-spacing: 0.3px;
+            font-size: 0.85em;
+            line-height: 1.15;
+            white-space: pre;
+            overflow-x: auto;
+            margin-bottom: 15px;
+            background: #020405;
+            padding: 10px;
+            border: 1px solid #1a3322;
         }
 
-        .sys-banner-line {
-            display: flex;
-            align-items: baseline;
-            margin-bottom: 4px;
+        .sys-info {
+            color: var(--accent-green);
+            margin-bottom: 15px;
+            font-weight: bold;
         }
 
-        .sys-banner-line:last-child {
-            margin-bottom: 0;
-        }
-
-        .hash-prefix {
-            color: var(--amber-dim);
-            margin-right: 10px;
-            user-select: none;
-        }
-
-        /* Панель метаданных тикета */
-        .ticket-meta {
+        /* Панель иммерсивных кнопок */
+        .command-deck {
             display: grid;
-            grid-template-columns: 1fr;
-            gap: 8px;
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-ind);
-            border-left: 4px solid var(--red);
-            padding: 16px 20px;
-            margin-bottom: 20px;
-        }
-
-        .meta-row {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .meta-key {
-            color: var(--amber);
-            font-weight: bold;
-        }
-
-        .meta-val {
-            color: #ffffff;
-        }
-
-        .prio-crit {
-            background-color: rgba(255, 46, 59, 0.15);
-            border: 1px solid var(--red);
-            color: var(--red);
-            padding: 1px 7px;
-            font-weight: bold;
-            text-decoration: line-through;
-            opacity: 0.75;
-        }
-
-        .prio-low {
-            background-color: rgba(255, 176, 0, 0.15);
-            border: 1px solid var(--amber);
-            color: var(--amber);
-            padding: 1px 8px;
-            font-weight: bold;
-        }
-
-        .status-closed {
-            background-color: rgba(140, 130, 117, 0.15);
-            border: 1px solid var(--text-muted);
-            color: #d1ccc0;
-            padding: 1px 8px;
-            font-weight: bold;
-        }
-
-        /* Панель интерактивных кнопок сисадмина */
-        .action-bar {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
             gap: 10px;
-            margin-bottom: 24px;
+            margin-bottom: 25px;
+            padding: 12px;
+            background: #070a0f;
+            border: 1px dashed var(--border-color);
         }
 
-        .sys-btn {
-            background-color: #1f1b16;
-            color: var(--amber);
-            border: 1px solid var(--amber-dim);
-            padding: 10px 12px;
+        .mil-btn {
+            background-color: #0f1620;
+            color: var(--accent-green);
+            border: 1px solid var(--accent-green);
             font-family: inherit;
-            font-size: 0.86em;
+            font-size: 0.85em;
             font-weight: bold;
-            text-align: left;
+            padding: 10px 12px;
             cursor: pointer;
-            border-radius: 3px;
-            transition: all 0.2s ease;
+            text-align: left;
+            transition: all 0.15s ease;
             display: flex;
             align-items: center;
             gap: 8px;
+            text-transform: uppercase;
         }
 
-        .sys-btn:hover {
-            background-color: rgba(255, 176, 0, 0.14);
-            border-color: var(--amber);
-            box-shadow: 0 0 12px rgba(255, 176, 0, 0.2);
+        .mil-btn:hover {
+            background-color: rgba(0, 255, 102, 0.15);
+            box-shadow: 0 0 10px rgba(0, 255, 102, 0.4);
             transform: translateY(-1px);
         }
 
-        .sys-btn:active {
-            transform: translateY(0);
+        .mil-btn.btn-danger {
+            color: var(--accent-red);
+            border-color: var(--accent-red);
         }
 
-        .sys-btn.btn-danger {
-            color: var(--red);
-            border-color: rgba(255, 46, 59, 0.5);
+        .mil-btn.btn-danger:hover {
+            background-color: rgba(255, 34, 51, 0.15);
+            box-shadow: 0 0 10px rgba(255, 34, 51, 0.4);
         }
 
-        .sys-btn.btn-danger:hover {
-            background-color: rgba(255, 46, 59, 0.15);
-            border-color: var(--red);
-            box-shadow: 0 0 12px rgba(255, 46, 59, 0.25);
-        }
-
-        /* Окно вывода интерактивных команд */
-        .interactive-console {
+        /* Интерактивный консольный лог */
+        .interactive-output {
             display: none;
-            background-color: #090807;
-            border: 1px solid var(--amber);
+            background-color: #030508;
+            border-left: 4px solid var(--accent-amber);
+            border-top: 1px solid #222;
+            border-right: 1px solid #222;
+            border-bottom: 1px solid #222;
             padding: 12px 16px;
-            margin-bottom: 24px;
-            font-size: 0.92em;
-            border-radius: 3px;
-            animation: fadeIn 0.25s ease-out;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+            color: var(--accent-amber);
+            animation: fadeIn 0.2s ease-out;
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-5px); }
+            from { opacity: 0; transform: translateY(-4px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Неразрывные разделители --- [ ЗАГОЛОВОК ] --- */
-        .section-header {
-            display: flex;
-            align-items: center;
-            color: var(--amber);
-            font-weight: bold;
-            margin: 28px 0 16px 0;
-            gap: 10px;
-            user-select: none;
-        }
-
-        .section-header::before {
-            content: "---";
-            color: var(--amber-dim);
-            flex-shrink: 0;
-        }
-
-        .section-header::after {
-            content: "";
-            flex-grow: 1;
-            border-bottom: 2px dashed var(--border-ind);
+        /* Заголовки разделов с рамкой */
+        .section-block {
+            margin-bottom: 24px;
+            border: 1px solid var(--border-color);
+            background: #080c10;
         }
 
         .section-title {
-            background-color: rgba(255, 176, 0, 0.08);
-            border: 1px solid var(--amber-dim);
-            padding: 2px 10px;
-            white-space: nowrap;
-        }
-
-        /* Описание инцидента */
-        .incident-box {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-ind);
-            padding: 16px 20px;
-            color: var(--text-main);
-        }
-
-        .incident-box p {
-            margin: 0 0 14px 0;
-        }
-
-        .incident-box p:last-child {
-            margin-bottom: 0;
-        }
-
-        /* Блок трассировки маршрута (Traceroute) */
-        .trace-terminal {
-            background-color: #080907;
-            border: 1px solid #263829;
-            border-left: 4px solid var(--green);
-            padding: 18px 20px;
-            font-size: 0.95em;
-            color: #d8f3dc;
-        }
-
-        .cmd-prompt {
-            color: var(--green);
+            background-color: #121c29;
+            color: var(--accent-green);
             font-weight: bold;
-            margin-bottom: 14px;
-            word-break: break-all;
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border-color);
+            letter-spacing: 0.5px;
         }
 
-        .hop-list {
-            margin-bottom: 16px;
+        .section-body {
+            padding: 14px 16px;
         }
 
-        .hop-row {
-            display: flex;
-            align-items: baseline;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 6px;
-            transition: background-color 0.3s ease;
+        /* Списки и текст */
+        .timeline-list, .notes-list {
+            margin: 6px 0 0 0;
+            padding-left: 20px;
         }
 
-        .hop-ip {
-            color: var(--cyan);
-            font-weight: bold;
-        }
-
-        .hop-host {
-            color: #ffffff;
-        }
-
-        .hop-dots {
-            flex-grow: 1;
-            border-bottom: 1px dotted #3a5a40;
-            min-width: 20px;
-        }
-
-        .hop-time {
-            color: var(--green);
-            font-weight: bold;
-        }
-
-        .hop-err {
-            color: var(--red);
-            font-weight: bold;
-        }
-
-        .hop-darpa {
-            color: var(--amber);
-            background-color: rgba(255, 176, 0, 0.12);
-            padding: 0 6px;
-            border: 1px solid var(--amber);
-            font-weight: bold;
-        }
-
-        .trace-warnings {
-            border-top: 1px dashed #263829;
-            border-bottom: 1px dashed #263829;
-            padding: 12px 0;
-            margin: 14px 0;
-            color: var(--amber);
-        }
-
-        .trace-warnings div {
-            margin-bottom: 4px;
-        }
-
-        .rad-hazard {
-            color: #000000;
-            background-color: var(--amber);
-            font-weight: bold;
-            padding: 1px 6px;
-            display: inline-block;
-        }
-
-        /* Аварийный блок перегрева деки */
-        .overheat-box {
-            background-color: rgba(255, 46, 59, 0.1);
-            border: 1px solid var(--red);
-            padding: 12px 16px;
-            color: #ffdde0;
-        }
-
-        .overheat-box div {
-            margin-bottom: 6px;
-        }
-
-        .overheat-box div:last-child {
-            margin-bottom: 0;
-        }
-
-        .temp-gauge-wrap {
-            margin-top: 10px;
-            background-color: #1a090b;
-            border: 1px solid #5c161e;
-            height: 10px;
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .temp-gauge-bar {
-            height: 100%;
-            width: 100%;
-            background: linear-gradient(90deg, #ffb000 0%, #ff5e00 50%, #ff002b 100%);
-            transition: width 0.4s ease;
-        }
-
-        /* Комментарии к тикету */
-        .comments-list {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-
-        .comment-card {
-            background-color: var(--bg-card);
-            border: 1px solid var(--border-ind);
-            border-radius: 3px;
-            padding: 14px 18px;
-        }
-
-        .comment-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 8px;
+        .timeline-list li, .notes-list li {
             margin-bottom: 8px;
-            font-weight: bold;
         }
 
-        .c-time {
-            color: var(--text-muted);
-        }
+        .highlight-green { color: var(--accent-green); font-weight: bold; }
+        .highlight-red { color: var(--accent-red); font-weight: bold; }
+        .highlight-amber { color: var(--accent-amber); font-weight: bold; }
 
-        .c-author-tech {
-            color: var(--cyan);
-        }
-
-        .c-author-boss {
-            color: var(--amber);
-        }
-
-        .c-author-sys {
-            color: var(--red);
-        }
-
-        .comment-quote {
-            margin: 0;
-            padding-left: 14px;
-            border-left: 3px solid #4a4236;
-            color: var(--text-main);
-        }
-
-        .comment-card.boss-card {
-            border-left: 3px solid var(--amber);
-        }
-
-        .comment-card.boss-card .comment-quote {
-            border-left-color: var(--amber-dim);
-            color: #fff3d6;
-        }
-
-        .comment-card.sys-kill-card {
-            background-color: rgba(255, 46, 59, 0.08);
-            border: 1px solid var(--red);
-            border-left: 4px solid var(--red);
-            box-shadow: 0 0 20px rgba(255, 46, 59, 0.12);
-        }
-
-        .comment-card.sys-kill-card .comment-quote {
-            border-left-color: var(--red);
-            color: #ffd6d9;
-        }
-
-        /* Подвал с живым таймером удаления */
-        .purge-footer {
-            margin-top: 26px;
-            padding: 12px 16px;
-            background-color: #090807;
-            border: 1px dashed var(--red);
+        /* Диагностические шкалы */
+        .diag-row {
+            margin-bottom: 6px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
             flex-wrap: wrap;
-            gap: 10px;
-            font-size: 0.9em;
+            gap: 5px;
         }
 
-        .timer-val {
-            color: var(--red);
+        /* Блок самоуничтожения */
+        .danger-alert-box {
+            background-color: rgba(255, 34, 51, 0.08);
+            border: 2px solid var(--accent-red);
+            padding: 16px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .countdown-timer {
+            font-size: 1.4em;
+            color: var(--accent-red);
             font-weight: bold;
-            font-size: 1.05em;
-            letter-spacing: 1px;
+            letter-spacing: 2px;
+            margin: 8px 0;
+            text-shadow: 0 0 10px rgba(255, 34, 51, 0.6);
         }
 
-        /* Адаптивность для мобильных устройств */
-        @media (max-width: 600px) {
-            body {
-                padding: 10px;
-                font-size: 13.5px;
-            }
-            .systrack-container {
-                padding: 16px;
-            }
-            .section-title {
-                white-space: normal;
-                font-size: 0.92em;
-            }
-            .hop-dots {
-                display: none;
-            }
-            .hop-row {
-                justify-content: space-between;
-                border-bottom: 1px solid #162418;
-                padding-bottom: 4px;
-            }
+        .audio-direct-call {
+            margin-top: 10px;
+            color: var(--accent-amber);
+            font-style: italic;
+            font-weight: bold;
+        }
+
+        /* Моб. адаптив */
+        @media (max-width: 700px) {
+            body { padding: 5px; font-size: 13px; }
+            .terminal-wrapper { padding: 10px; }
+            .ascii-header { font-size: 0.55em; }
         }
     </style>
 </head>
 <body>
 
-<div class="systrack-container" id="mainTerminal">
+<div class="terminal-wrapper" id="mainTerminal">
 
-    <!-- Индустриальная шапка -->
-    <div class="sys-banner">
-        <div class="sys-banner-line">
-            <span class="hash-prefix">#</span>
-            <span>L’ÉTOILE DORÉE // IT-INFRASTRUCTURE &amp; SUB-NET MAINTENANCE</span>
-        </div>
-        <div class="sys-banner-line">
-            <span class="hash-prefix">#</span>
-            <span>СИСТЕМА ТИКЕТОВ: SysTrack v4.02 [Локальный узел 40-го этажа]</span>
-        </div>
-        <div class="sys-banner-line">
-            <span class="hash-prefix">#</span>
-            <span>ФАЙЛ: NET_ANOMALY_LOG [DV 10]</span>
-        </div>
+    <!-- ASCII Шапка -->
+    <div class="ascii-header">▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+██  MILITECH / ARASAKA JOINT TACTICAL COMMAND SYSTEM [REV. 2022.09]  ██
+██  CORE DESIGNATION: CAESAR-IV // STRATEGIC PACIFICATION MATRIX   ██
+██  STATUS: BURIED_AUTONOMOUS // CLEARANCE: EYES ONLY [DV 12]         ██
+▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓</div>
+
+    <div class="sys-info">
+        &gt; MOUNTING VOLUME: /DEV/NULL/CAESAR_PRIME_CACHE... <span class="highlight-green">OK</span><br>
+        &gt; WARNING: GEIGER-MÜLLER COUNTER AT SOURCE NODE EXCEEDS <span class="highlight-red">450 RAD/HR</span>.<br>
+        &gt; EXECUTING TACTICAL BRIEFING DUMP...
     </div>
 
-    <!-- Метаданные тикета -->
-    <div class="ticket-meta">
-        <div class="meta-row">
-            <span class="meta-key">TICKET_ID:</span>
-            <span class="meta-val">#ERR-9940-VIP</span>
-        </div>
-        <div class="meta-row">
-            <span class="meta-key">ДАТА СОЗДАНИЯ:</span>
-            <span class="meta-val">14.11.2045 // 18:15:22</span>
-        </div>
-        <div class="meta-row">
-            <span class="meta-key">ПРИОРИТЕТ:</span>
-            <span class="prio-crit">КРИТИЧЕСКИЙ [Красный]</span>
-            <span style="color: var(--text-muted);">-&gt;</span>
-            <span class="prio-low" id="prioBadge">[ИЗМЕНЕНО ДИРЕКЦИЕЙ НА: НИЗКИЙ]</span>
-        </div>
-        <div class="meta-row">
-            <span class="meta-key">АВТОР:</span>
-            <span class="meta-val">Гленн Мартинес [Старший сетевой техник]</span>
-        </div>
-        <div class="meta-row">
-            <span class="meta-key">СТАТУС:</span>
-            <span class="status-closed">ПРИНУДИТЕЛЬНО ЗАКРЫТ [Архив]</span>
-        </div>
-    </div>
-
-    <!-- Интерактивные кнопки управления узлом -->
-    <div class="action-bar">
-        <button class="sys-btn" onclick="replayTrace()">
-            <span>▶</span> ЭМУЛЯЦИЯ ТРАССИРОВКИ
+    <!-- Панель иммерсивных кнопок -->
+    <div class="command-deck">
+        <button class="mil-btn" onclick="runDeepScan()">
+            <span>[▶]</span> ЗАПУСТИТЬ DEEP SCAN
         </button>
-        <button class="sys-btn" onclick="pingBiometrics()">
-            <span>♥</span> ТЕЛЕМЕТРИЯ: Г. МАРТИНЕС
+        <button class="mil-btn" onclick="coolMatrix()">
+            <span>[❄]</span> СБРОС ТЕМПЕРАТУРЫ
         </button>
-        <button class="sys-btn" onclick="scanRadiation()">
-            <span>☢</span> ДАТЧИК ФОНА ШЛЮЗА №19
+        <button class="mil-btn" onclick="checkBalance()">
+            <span>[$]</span> ПРОВЕРИТЬ СЧЕТА
         </button>
-        <button class="sys-btn btn-danger" onclick="escalateNetwatch()">
-            <span>🚨</span> ОТПРАВИТЬ ДАМП В NETWATCH
+        <button class="mil-btn btn-danger" onclick="disarmCharge()">
+            <span>[✕]</span> ОТКЛЮЧИТЬ ЗАРЯД
         </button>
     </div>
 
-    <!-- Консоль отклика на нажатие кнопок -->
-    <div class="interactive-console" id="sysConsole"></div>
+    <!-- Консоль отклика -->
+    <div class="interactive-output" id="sysConsole"></div>
 
-    <!-- РАЗДЕЛ 1: ОПИСАНИЕ ИНЦИДЕНТА -->
-    <div class="section-header">
-        <span class="section-title">[ ОПИСАНИЕ ИНЦИДЕНТА ]</span>
-    </div>
-
-    <div class="incident-box">
-        <p>В 17:50 четверо частных курьеров в экзоскелетах занесли в VIP-ложу №1 (бронь «C. Caesar») черный армейский кофр без маркировки. Потребовали вывести им прямой патч-корд от нашей магистральной оптики в обход роутеров отеля.</p>
-        <p>Как только они воткнули кабель, у меня в серверной выбило предохранители на третьей стойке, а кулеры охлаждения взвыли как турбина ави. Я запустил стандартный пинг и трассировку маршрута, чтобы проверить, не жгут ли они нам линию.</p>
-    </div>
-
-    <!-- РАЗДЕЛ 2: ДАМП ТРАССИРОВКИ -->
-    <div class="section-header">
-        <span class="section-title">[ ДАМП ТРАССИРОВКИ МАРШРУТА // TRACEROUTE_LOG ]</span>
-    </div>
-
-    <div class="trace-terminal">
-        <div class="cmd-prompt">$ root@etoile-penthouse:~# tracepath -n -p 6660 192.168.0.254</div>
-
-        <div class="hop-list" id="hopList">
-            <div class="hop-row" id="hop1">
-                <span>1: <span class="hop-ip">[192.168.0.1]</span></span>
-                <span class="hop-host">L_Etoile_40F_Switch</span>
-                <span class="hop-dots"></span>
-                <span class="hop-time">0.412 ms</span>
-            </div>
-            <div class="hop-row" id="hop2">
-                <span>2: <span class="hop-ip">[10.44.12.08]</span></span>
-                <span class="hop-host">Marina_Substation_B</span>
-                <span class="hop-dots"></span>
-                <span class="hop-time">1.105 ms</span>
-            </div>
-            <div class="hop-row" id="hop3">
-                <span>3: <span class="hop-ip">[172.16.0.00]</span></span>
-                <span class="hop-err">[ОШИБКА: УЗЕЛ НЕ В РЕЕСТРЕ NETWATCH]</span>
-            </div>
-            <div class="hop-row" id="hop4">
-                <span>4: <span class="hop-ip">[000.00.0.00]</span></span>
-                <span class="hop-darpa">[ПРОТОКОЛ СТАРОЙ СЕТИ: D.A.R.P.A_v2]</span>
-            </div>
-        </div>
-
-        <div class="trace-warnings">
-            <div>&gt;&gt; ВНИМАНИЕ: Спутниковый шлюз проигнорирован!</div>
-            <div>&gt;&gt; Маршрут: Заброшенный коллектор связи №19 [Год постройки: 2018].</div>
-            <div>&gt;&gt; Вектор направления: ЦЕНТРАЛЬНЫЙ РАЙОН -&gt; СЕКТОР "GROUND ZERO"</div>
-            <div>&gt;&gt; Конечный терминал: <span class="rad-hazard">[ДАННЫЕ ИСКАЖЕНЫ РАДИАЦИОННЫМ ФОНОМ // 420 R/h]</span></div>
-        </div>
-
-        <div class="overheat-box">
-            <div style="color: var(--red); font-weight: bold;">$ [CRITICAL ALERT]: Встречный импульс из коллектора!</div>
-            <div id="tempReadout">$ Температура чипа кибердеки техника: <strong>78°C... 89°C... 104°C!</strong></div>
-            <div style="color: var(--amber); font-weight: bold;">$ ПРИНУДИТЕЛЬНЫЙ РАЗРЫВ СОЕДИНЕНИЯ (Аварийный отстрел кабеля).</div>
-            <div class="temp-gauge-wrap">
-                <div class="temp-gauge-bar" id="tempBar"></div>
-            </div>
+    <!-- DIRECTIVE 01 -->
+    <div class="section-block">
+        <div class="section-title">[DIRECTIVE 01] // OP_CODE: "KALI UNCHAINED" (СЕКТОР: ПАСИФИКА)</div>
+        <div class="section-body">
+            <p><strong>ЦЕЛЬ ОПЕРАЦИИ:</strong> Принудительная дематериализация объекта «Аша Вонг»</p>
+            <p><strong>ХРОНОЛОГИЯ ВЫПОЛНЕНИЯ:</strong></p>
+            <ul class="timeline-list">
+                <li>[T-00:15:00] Через прокси-цепочку («Цезарь» -&gt; «Дэдэ» -&gt; «Текила») к объекту доставлена ударная группа наемников.</li>
+                <li>[T-00:10:00] Перехват управления локальной подсетью лаборатории Embrace. Отключение внешних турелей для беспрепятственного входа живой силы.</li>
+                <li>[T-00:08:30] Подача команды [OVERRIDE_00] на медицинский сервер подвала: Остановка насосов нейро-ингибиторов объекта «Аша Вонг». Искусственная стимуляция острого киберпсихоза.</li>
+                <li>[T+00:12:00] Наемники уничтожают биологическую оболочку объекта. Сознание «Аша Вонг» успешно вытеснено в общую Архитектуру Пасифики.</li>
+            </ul>
+            <p style="margin-top: 12px;">
+                <strong>СТРАТЕГИЧЕСКИЙ ИТОГ:</strong> <span class="highlight-green">УСПЕХ (100%).</span><br>
+                Внимание Сетевого Дозора (NetWatch) полностью отвлечено на вирусную активность в Пасифике. Готовность к поглощению матрицы Аши ядром CAESAR-IV: <span class="highlight-amber">78%</span>.
+            </p>
         </div>
     </div>
 
-    <!-- РАЗДЕЛ 3: КОММЕНТАРИИ К ТИКЕТУ -->
-    <div class="section-header">
-        <span class="section-title">[ КОММЕНТАРИИ К ТИКЕТУ ]</span>
-    </div>
-
-    <div class="comments-list">
-        <!-- Комментарий 1 -->
-        <div class="comment-card">
-            <div class="comment-header">
-                <span class="c-author-tech">[18:22] Гленн Мартинес (IT-отдел):</span>
-                <span class="c-time">ID: STAFF_409</span>
-            </div>
-            <blockquote class="comment-quote">
-                Вы там рехнулись на ресепшене?! Эта штука в Ложе №1 тянет гигабайты по мертвым подземным проводам прямиком из-под радиоактивных руин башни Арасаки! Когда я попытался просканировать порт, в наушниках затрещал счетчик Гейгера, кто-то прошептал мои детские пароли, а моя дека расплавила пластик на столе! Я вызываю инспекторов Сетевого Дозора!
-            </blockquote>
-        </div>
-
-        <!-- Комментарий 2 -->
-        <div class="comment-card boss-card">
-            <div class="comment-header">
-                <span class="c-author-boss">[18:24] Артур Вэнс [Управляющий отелем]:</span>
-                <span class="c-time">OVERRIDE_AUTH: EXECUTIVE</span>
-            </div>
-            <blockquote class="comment-quote">
-                Мартинес, закрой рот и даже не вздумай обращаться в NetWatch. Нам только что перевели 15% акций городского водоканала за то, чтобы этот кабель лежал там до полуночи.
-            </blockquote>
-        </div>
-
-        <!-- Комментарий 3 -->
-        <div class="comment-card">
-            <div class="comment-header">
-                <span class="c-author-tech">[18:26] Гленн Мартинес (IT-отдел):</span>
-                <span class="c-time">ID: STAFF_409</span>
-            </div>
-            <blockquote class="comment-quote">
-                Но сэр, по кабелю из первой ложи только что прошел вторичный скрытый пакет в сторону Пасифики! Эта тварь в кейсе сканирует импланты всех гостей в зале через наш Дата Пул! Она кого-то ждет!
-            </blockquote>
-        </div>
-
-        <!-- Комментарий 4 (Системный) -->
-        <div class="comment-card sys-kill-card">
-            <div class="comment-header">
-                <span class="c-author-sys">[18:27] СИСТЕМНОЕ УВЕДОМЛЕНИЕ:</span>
-                <span class="c-time">KERNEL_EVENT // 0xCAESAR</span>
-            </div>
-            <blockquote class="comment-quote">
-                Пользователь <strong>[Гленн Мартинес]</strong> отключен от сети (Причина: Остановка кардио-импланта // Код ошибки: <strong>0xCAESAR</strong>).<br>
-                Тикет переведен в статус «Решено». Удаление лога через 6 часов.
-            </blockquote>
+    <!-- DIRECTIVE 02 -->
+    <div class="section-block">
+        <div class="section-title">[DIRECTIVE 02] // LOGISTICS: PROJECT "RUBICON" (Embrace Group)</div>
+        <div class="section-body">
+            <p><strong>БАРТЕРНЫЙ ПРОТОКОЛ #884-CB:</strong></p>
+            <ul class="notes-list">
+                <li><strong>ПЕРЕДАНО КОНТРАГЕНТУ (Embrace Group):</strong> Созданный Ашей Вонг технология поражения нейросистемы "Сандавистан", потерянный при уничтожении лаборатории Пасифики. Цель использования: создание лояльных солдат корпорации.</li>
+                <li><strong>ПОЛУЧЕНО ВЗАМЕН (Оформлено на подставной траст «Rubicon»):</strong>
+                    <ol style="margin-top: 5px; padding-left: 15px;">
+                        <li>Полный контроль над СЕВЕР-ВОСТОК территории GROUND ZERO в Центральном Квартале. Прикрытие: раскопки от независимой корпорации. Ликвидация последствий ядерного взрыва.</li>
+                        <li>Поставка 40 тонн криогенного жидкого гелия на склад временного хранения у периметра Горячей Зоны (Центр города).</li>
+                    </ol>
+                </li>
+            </ul>
         </div>
     </div>
 
-    <!-- Подвал с живым таймером -->
-    <div class="purge-footer">
-        <span>[ АВТОМАТИЧЕСКАЯ ЗАЧИСТКА ДАМПА ПАМЯТИ ]</span>
-        <span>ОСТАЛОСЬ ВРЕМЕНИ: <span class="timer-val" id="purgeTimer">05:59:59</span></span>
+    <!-- DIRECTIVE 03 -->
+    <div class="section-block">
+        <div class="section-title">[DIRECTIVE 03] // TELEMETRY STREAM: GROUND ZERO [NODE: TT-MED-UNIT-04]</div>
+        <div class="section-body">
+            <p>&gt;&gt; ВОСПРОИЗВЕДЕНИЕ ПОСЛЕДНЕГО СЕАНСА СВЯЗИ...<br>
+            &gt;&gt; ИСТОЧНИК: Уничтоженный медицинский робот Trauma Team [СЕРИЙНЫЙ №: 04-X]<br>
+            &gt;&gt; ВРЕМЕННОЙ ПРОЦЕССОР ДРОИДА: Внешняя инъекция сознания [СУБЪЕКТ №2]</p>
+
+            <p style="margin-top: 10px;"><strong>[АУДИОВИЗУАЛЬНЫЙ ПОТОК // ЗАПИСЬ 04:12:09 AM]</strong></p>
+            <ul class="notes-list" style="list-style-type: square;">
+                <li><strong>[ЗВУК]:</strong> Оглушительный, непрерывный треск дозиметра. Скрежет сервоприводов, волочащих разбитый корпус дроида по радиоактивному шлаку и костям.</li>
+                <li><strong>[ВИДЕО]:</strong> Оптический сенсор в красной ряби. Под завалами бывшего Медицинского Центра Arasaka зияет пролом в правительственный бункер. Внизу, в испаряющемся бассейне тяжелой воды, возвышается черный бронированный монолит суперкомпьютера. На обшивке — выгоревший герб объединенного командования времен Войны и надпись: «CAESAR-IV».</li>
+                <li><strong>[ГОЛОС ДРОИДА]:</strong> <em>«...Аша... я вижу... Оно здесь... Оно живое...»</em></li>
+            </ul>
+
+            <div style="margin-top: 15px; background: #04060a; padding: 12px; border: 1px solid #1a2a3a;">
+                <p style="color: var(--accent-green); font-weight: bold; margin-bottom: 6px;">[СИСТЕМНАЯ ДИАГНОСТИКА ЯДРА CAESAR-IV]:</p>
+                <div class="diag-row"><span>├── ЦЕЛОСТНОСТЬ КУПОЛА БУНКЕРА:</span> <span>31% (Угроза обрушения свода)</span></div>
+                <div class="diag-row"><span>├── ДАВЛЕНИЕ ХЛАДАГЕНТА:</span> <span class="highlight-red" id="coolantVal">04% [КРИТИЧЕСКАЯ УТЕЧКА]</span></div>
+                <div class="diag-row"><span>├── ТЕМПЕРАТУРА КВАНТОВОЙ МАТРИЦЫ:</span> <span class="highlight-red" id="tempVal">94.6°C (Предел плавления: 98.0°C)</span></div>
+                <div class="diag-row"><span>└── РАСЧЕТНОЕ ВРЕМЯ ДО СМЕРТИ ИИ:</span> <span>336 ЧАСОВ (14 СУТОК)</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TACTICAL ASSESSMENT -->
+    <div class="section-block">
+        <div class="section-title">[TACTICAL ASSESSMENT: EXPEDITIONARY FORCE]</div>
+        <div class="section-body">
+            <p><strong>ОЦЕНКА ИСПОЛНИТЕЛЕЙ (Оперативная пара фиксера «Шило»):</strong></p>
+            <ul class="notes-list">
+                <li><strong>СУБЪЕКТ 1:</strong> Высокая живучесть в замкнутых пространствах.</li>
+                <li><strong>СУБЪЕКТ 2 [Носитель: «Дэдэ»]:</strong> Выжил при контакте с объектом «Аша Вонг». Уникальная нейро-совместимость. Разум успешно пережил оцифровку, транзит через процессор дроида TT-04 и имплантацию в чужой биологический сосуд.</li>
+            </ul>
+            <p style="margin-top: 12px;">
+                <strong>ВЕРДИКТ СИСТЕМЫ:</strong><br>
+                Кандидаты идеальны для проведения инженерно-спасательной операции в эпицентре ядерного взрыва (Ground Zero).
+            </p>
+        </div>
+    </div>
+
+    <!-- Блок тревоги и таймера -->
+    <div class="danger-alert-box" id="dangerBox">
+        <p class="highlight-red">&gt;&gt; ВНИМАНИЕ! ОБНАРУЖЕНО НЕСАНКЦИОНИРОВАННОЕ ЧТЕНИЕ КЭША ИЗ ЛОЖИ №1!</p>
+        <p>АКТИВАЦИЯ ТЕРМИЧЕСКОГО ЗАРЯДА ТЕРМИНАЛА ЧЕРЕЗ:</p>
+        <div class="countdown-timer" id="timerDisplay">00:18</div>
+        <p>&gt;&gt; ЗАПУСК ПРЯМОГО АУДИО-КАНАЛА С ОБЪЕКТАМИ:</p>
+        <div class="audio-direct-call">«Проверьте ваши счета. Вы только что наняты Римом».</div>
     </div>
 
 </div>
@@ -670,95 +333,77 @@
 <script>
     const consoleBox = document.getElementById('sysConsole');
 
-    function showConsoleMessage(htmlContent, borderColor = 'var(--amber)') {
+    function logMessage(text, color = 'var(--accent-amber)') {
         consoleBox.style.display = 'block';
-        consoleBox.style.borderColor = borderColor;
-        consoleBox.innerHTML = htmlContent;
+        consoleBox.style.color = color;
+        consoleBox.innerHTML = text;
+        consoleBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
-    // 1. Эмуляция трассировки и скачка температуры
-    function replayTrace() {
-        const hops = ['hop1', 'hop2', 'hop3', 'hop4'];
-        const tempBar = document.getElementById('tempBar');
-        const tempReadout = document.getElementById('tempReadout');
-        const term = document.getElementById('mainTerminal');
-
-        tempBar.style.width = '15%';
-        tempReadout.innerHTML = '$ Повторный опрос маршрута 192.168.0.254... Нагрев чипа: <strong>45°C</strong>';
-
-        showConsoleMessage(
-            '<span style="color: var(--green);">&gt;&gt; ВЫПОЛНЯЕТСЯ TRACEPATH...</span> Опрос узлов от коммутатора 40-го этажа до сектора "GROUND ZERO"...',
-            'var(--green)'
-        );
-
-        hops.forEach((id, idx) => {
-            const el = document.getElementById(id);
-            el.style.opacity = '0.2';
-            setTimeout(() => {
-                el.style.opacity = '1';
-                el.style.backgroundColor = 'rgba(255, 176, 0, 0.12)';
-                setTimeout(() => el.style.backgroundColor = 'transparent', 400);
-
-                if (idx === 2) {
-                    tempBar.style.width = '75%';
-                    tempReadout.innerHTML = '$ Температура чипа кибердеки техника: <strong>78°C... 89°C...</strong>';
-                }
-                if (idx === 3) {
-                    tempBar.style.width = '100%';
-                    tempReadout.innerHTML = '$ Температура чипа кибердеки техника: <strong>78°C... 89°C... 104°C! [КРИТИЧЕСКИЙ ПЕРЕГРЕВ]</strong>';
-                    term.classList.remove('shake-active');
-                    void term.offsetWidth;
-                    term.classList.add('shake-active');
-                }
-            }, (idx + 1) * 350);
-        });
-    }
-
-    // 2. Пинг кардио-импланта Мартинеса
-    function pingBiometrics() {
-        showConsoleMessage(
-            '<div style="color: var(--cyan); font-weight: bold;">&gt;&gt; ЗАПРОС БИОМЕТРИИ СОТРУДНИКА [STAFF_409 // ГЛЕНН МАРТИНЕС]:</div>' +
-            '<div>• Кардио-монитор BioDyne Mk.IV: <span style="color: var(--red); font-weight: bold;">0 BPM (АСИСТОЛИЯ)</span></div>' +
-            '<div>• Нейролинк: <span style="color: var(--amber);">ВЫГОРАНИЕ ШИНЫ ДАННЫХ (Температура в момент смерти: 104.2°C)</span></div>' +
-            '<div>• Последняя сигнатура в буфере памяти: <span style="color: var(--red); font-weight: bold;">0xCAESAR</span></div>',
-            'var(--cyan)'
+    // Кнопка 1: Deep Scan
+    function runDeepScan() {
+        logMessage(
+            '&gt;&gt; RUNNING DEEP_SCAN [CAESAR-IV CORE]...<br>' +
+            '• Буфер кэша Ложи №1: <span class="highlight-red">ЗАХВЕЧЕН ВНЕШНИМ ПРОКСИ</span><br>' +
+            '• Протокол «Рим»: АКТИВЕН. Идентификация наемников подтверждена.<br>' +
+            '• Радиационный фон в секторе: 452.1 Rad/h (Стабильно критический).',
+            'var(--accent-green)'
         );
     }
 
-    // 3. Замер радиации коллектора №19
-    function scanRadiation() {
-        showConsoleMessage(
-            '<div style="color: var(--amber); font-weight: bold;">&gt;&gt; ТЕЛЕМЕТРИЯ КОЛЛЕКТОРА СВЯЗИ №19 [СЕКТОР "GROUND ZERO"]:</div>' +
-            '<div>• Мощность дозы гамма-излучения на оптоволоконном узле: <span style="color: var(--red); font-weight: bold;">420.8 R/h</span></div>' +
-            '<div>• Статус линии: <span style="color: var(--green);">АКТИВНЫЙ ОБМЕН ПАКЕТАМИ (14.8 Гбит/с -> VIP-ложа №1)</span></div>' +
-            '<div>• Вторичный вектор: <span style="color: var(--amber);">Скрытая ретрансляция в локальный Data Pool Пасифики</span></div>',
-            'var(--amber)'
+    // Кнопка 2: Сброс температуры
+    let cooled = false;
+    function coolMatrix() {
+        const tempElem = document.getElementById('tempVal');
+        const coolantElem = document.getElementById('coolantVal');
+        
+        if (!cooled) {
+            tempElem.textContent = '68.2°C (Нормализация)';
+            tempElem.className = 'highlight-green';
+            coolantElem.textContent = '48% [СТАБИЛЬНО]';
+            coolantElem.className = 'highlight-green';
+            cooled = true;
+            logMessage('&gt;&gt; [OK]: Аварийный сброс жидкого гелия выполнен успешно. Температура квантовой матрицы стабилизирована.', 'var(--accent-green)');
+        } else {
+            logMessage('&gt;&gt; [INFO]: Ресурс резервных клапанов хладагента исчерпан.', 'var(--accent-amber)');
+        }
+    }
+
+    // Кнопка 3: Проверка счетов
+    function checkBalance() {
+        logMessage(
+            '&gt;&gt; ФИНАНСОВЫЙ ШЛЮЗ [SWIFT-MILITECH // ТРАСТ RUBICON]:<br>' +
+            '• Баланс счета субъекта [Дэдэ]: <span class="highlight-green">+50,000 eb (Аванс переведен)</span><br>' +
+            '• Баланс счета субъекта [Партнер]: <span class="highlight-green">+50,000 eb (Аванс переведен)</span><br>' +
+            '• Назначение платежа: «Зачистка бункера Ground Zero. Контракт закрыт на имя Рима».',
+            'var(--accent-green)'
         );
     }
 
-    // 4. Попытка отправить дамп в NetWatch
-    function escalateNetwatch() {
-        const term = document.getElementById('mainTerminal');
-        term.classList.remove('shake-active');
-        void term.offsetWidth;
-        term.classList.add('shake-active');
+    // Кнопка 4: Отключение заряда
+    let timerInterval = null;
+    let secondsLeft = 18;
+    const timerDisplay = document.getElementById('timerDisplay');
+    const dangerBox = document.getElementById('dangerBox');
 
-        showConsoleMessage(
-            '<div style="color: var(--red); font-weight: bold;">&gt;&gt; [ОШИБКА ДОСТУПА // ПЕРЕХВАТ ПАКЕТА]:</div>' +
-            '<div>Попытка соединения с экстренным шлюзом NetWatch заблокирована локальным прокси отеля.</div>' +
-            '<div style="color: var(--amber); margin-top: 4px;">[ПРОТОКОЛ 0xCAESAR]: «Ваша активность зафиксирована. Оставайтесь на своем рабочем месте».</div>',
-            'var(--red)'
-        );
+    function disarmCharge() {
+        if (timerInterval) clearInterval(timerInterval);
+        dangerBox.style.borderColor = 'var(--accent-green)';
+        dangerBox.style.backgroundColor = 'rgba(0, 255, 102, 0.05)';
+        timerDisplay.style.color = 'var(--accent-green)';
+        timerDisplay.textContent = 'ОТКЛЮЧЕНО [0xCAESAR_OVERRIDE]';
+        logMessage('&gt;&gt; [СИСТЕМА]: Термический заряд терминала деактивирован удаленной командой из Ложи №1.', 'var(--accent-green)');
     }
 
-    // Живой обратный отсчет 6 часов
-    let totalSeconds = 6 * 3600 - 1;
-    setInterval(() => {
-        if (totalSeconds > 0) totalSeconds--;
-        const h = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-        const m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-        const s = String(totalSeconds % 60).padStart(2, '0');
-        document.getElementById('purgeTimer').textContent = `${h}:${m}:${s}`;
+    // Таймер обратного отсчета
+    timerInterval = setInterval(() => {
+        if (secondsLeft > 0) {
+            secondsLeft--;
+            timerDisplay.textContent = `00:${String(secondsLeft).padStart(2, '0')}`;
+        } else {
+            clearInterval(timerInterval);
+            timerDisplay.textContent = 'ДЕОБФУСКАЦИЯ ЗАВЕРШЕНА';
+        }
     }, 1000);
 </script>
 
