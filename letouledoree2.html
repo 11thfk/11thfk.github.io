@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>КОНСЬЕРЖ_УРОВЕНЬ_2 // СПИСОК_ГОСТЕЙ_2045.dat</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #080a0f;
+            color: #d1d8e0;
+            font-family: 'Consolas', 'Courier New', Courier, monospace;
+            font-size: 15px;
+            line-height: 1.5;
+            padding: 20px;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+        }
+
+        .terminal {
+            background-color: #10141d;
+            border: 1px solid #263142;
+            border-radius: 6px;
+            padding: 28px;
+            max-width: 880px;
+            width: 100%;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.9);
+            position: relative;
+        }
+
+        /* Верхняя строка загрузки с резиновым отточием */
+        .decrypt-bar {
+            display: flex;
+            align-items: baseline;
+            color: #00ff9d;
+            font-weight: bold;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .decrypt-dots {
+            flex-grow: 1;
+            border-bottom: 2px dotted #00ff9d;
+            min-width: 30px;
+            opacity: 0.5;
+        }
+
+        .access-badge {
+            display: inline-block;
+            background-color: rgba(255, 215, 0, 0.1);
+            border: 1px solid #ffd700;
+            color: #ffd700;
+            font-weight: bold;
+            padding: 4px 12px;
+            border-radius: 3px;
+            margin-bottom: 18px;
+            text-shadow: 0 0 6px rgba(255, 215, 0, 0.3);
+        }
+
+        /* Системные логи в шапке */
+        .sys-logs {
+            background-color: #0c0f16;
+            border-left: 3px solid #00e5ff;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            font-size: 0.95em;
+        }
+
+        .sys-logs div {
+            margin-bottom: 4px;
+            color: #00e5ff;
+        }
+
+        .sys-logs div:last-child {
+            margin-bottom: 0;
+        }
+
+        .sys-logs .warning {
+            color: #ff9f1a;
+            font-weight: bold;
+        }
+
+        /* Панель управления списком */
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .toolbar-hint {
+            color: #7f8fa6;
+            font-size: 0.9em;
+            font-style: italic;
+        }
+
+        .
