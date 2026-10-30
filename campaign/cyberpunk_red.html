@@ -1,0 +1,1771 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+    <title>CYBERPUNK RED // КАЛЬКУЛЯТОР УРОНА & КОЛОДА ТРАВМ</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: JetBrains Mono & Share Tech Mono for authentic ASCII/Cyberpunk typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,400;0,600;0,700;0,800;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cpBlack: '#07070a',
+                        cpPanel: '#0e0e14',
+                        cpCard: '#12121a',
+                        cpRed: '#ff003c',
+                        cpRedDark: '#8a0020',
+                        cpYellow: '#fcee0a',
+                        cpCyan: '#00f0ff',
+                        cpGreen: '#00ff66',
+                        cpGray: '#2a2a38',
+                        cpMuted: '#7a7a90'
+                    },
+                    fontFamily: {
+                        mono: ['"JetBrains Mono"', '"Share Tech Mono"', 'Courier New', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Базовые настройки и кастомные скроллбары в стиле Cyberpunk RED */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #07070a;
+            color: #e6e6f0;
+            font-family: 'JetBrains Mono', monospace;
+            overflow-x: hidden;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(255, 0, 60, 0.12) 0%, transparent 60%),
+                linear-gradient(rgba(18, 18, 26, 0.9) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(18, 18, 26, 0.9) 1px, transparent 1px);
+            background-size: 100% 100%, 24px 24px, 24px 24px;
+        }
+
+        /* Эффект ЭЛТ-терминала (отключаемый) */
+        .crt-overlay {
+            pointer-events: none;
+            position: fixed;
+            inset: 0;
+            z-index: 90;
+            background: linear-gradient(
+                rgba(18, 16, 16, 0) 50%, 
+                rgba(0, 0, 0, 0.28) 50%
+            );
+            background-size: 100% 4px;
+            opacity: 0.65;
+        }
+
+        .crt-disabled .crt-overlay {
+            display: none;
+        }
+
+        /* ASCII рамки и скошенные углы в стиле Колоды Травмы Cyberpunk RED */
+        .cp-card-frame {
+            position: relative;
+            background: #101018;
+            border: 1px solid #ff003c;
+            box-shadow: 0 0 18px rgba(255, 0, 60, 0.12), inset 0 0 20px rgba(255, 0, 60, 0.04);
+            transition: all 0.2s ease;
+        }
+
+        .cp-card-frame:hover {
+            box-shadow: 0 0 25px rgba(255, 0, 60, 0.22), inset 0 0 24px rgba(255, 0, 60, 0.07);
+        }
+
+        /* Скошенный правый верхний и левый нижний угол для карточек медопций как в PDF */
+        .cp-chamfer {
+            clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+        }
+
+        /* Анимация тревоги при достижении половины здоровья (Порог тяжелого ранения) */
+        @keyframes pulse-heavy-wound {
+            0%, 100% {
+                background-color: rgba(255, 0, 60, 0.22);
+                border-color: #ff003c;
+                box-shadow: 0 0 15px rgba(255, 0, 60, 0.55), inset 0 0 10px rgba(255, 0, 60, 0.3);
+            }
+            50% {
+                background-color: rgba(252, 238, 10, 0.18);
+                border-color: #fcee0a;
+                box-shadow: 0 0 22px rgba(252, 238, 10, 0.65), inset 0 0 12px rgba(252, 238, 10, 0.25);
+            }
+        }
+
+        .heavy-wound-active {
+            animation: pulse-heavy-wound 1.6s infinite ease-in-out;
+        }
+
+        @keyframes pulse-mortal-wound {
+            0%, 100% {
+                background-color: rgba(255, 0, 60, 0.38);
+                border-color: #ff003c;
+                box-shadow: 0 0 25px rgba(255, 0, 60, 0.85);
+            }
+            50% {
+                background-color: rgba(120, 0, 25, 0.45);
+                border-color: #ffffff;
+                box-shadow: 0 0 35px rgba(255, 0, 60, 1);
+            }
+        }
+
+        .mortal-wound-active {
+            animation: pulse-mortal-wound 1s infinite ease-in-out;
+        }
+
+        /* Убираем стрелки у числовых инпутов для чистого терминального вида */
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        /* Кастомный скроллбар */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #07070a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #ff003c;
+            border-radius: 2px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #fcee0a;
+        }
+
+        .ascii-border-text {
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+        }
+    </style>
+</head>
+<body class="selection:bg-cpRed selection:text-white">
+    <!-- Наложение CRT-линий терминала -->
+    <div class="crt-overlay"></div>
+
+    <!-- ГЛАВНЫЙ КОНТЕЙНЕР СТРАНИЦЫ -->
+    <div class="max-w-7xl mx-auto px-3 sm:px-5 lg:px-8 py-4 sm:py-6 flex flex-col min-h-screen justify-between">
+
+        <!-- ВЕРХНЯЯ ПАНЕЛЬ / ASCII ШАПКА CYBERPUNK RED -->
+        <header class="mb-6">
+            <div class="border-2 border-cpRed bg-cpPanel/95 p-3 sm:p-5 rounded relative overflow-hidden shadow-[0_0_25px_rgba(255,0,60,0.2)]">
+                <!-- Декоративная полоса в стиле карт травм (М ЕДОПЦИИ : . . : : . ) -->
+                <div class="flex items-center justify-between bg-cpRed text-cpBlack font-extrabold px-2 py-1 text-xs sm:text-sm tracking-widest mb-3 rounded-sm">
+                    <div class="flex items-center gap-2 truncate">
+                        <span class="bg-cpBlack text-cpRed px-1.5 py-0.5 font-black">RED</span>
+                        <span class="truncate">NET-ARCH // TRAUMA TEAM COMBAT TRACKER v2.45</span>
+                    </div>
+                    <span class="hidden sm:inline font-mono tracking-tighter">:: . : . : : ! . : : I</span>
+                </div>
+
+                <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                    <!-- ASCII Логотип и Заголовок -->
+                    <div>
+                        <pre class="text-[9px] sm:text-[11px] leading-[1.05] text-cpRed font-bold overflow-x-auto select-none hidden sm:block">
+ ██████╗██╗   ██╗██████╗ ███████╗██████╗ ██████╗ ██╗   ██╗███╗   ██╗██╗  ██╗    ██████╗ ███████╗██████╗ 
+██╔════╝╚██╗ ██╔╝██╔══██╗██╔════╝██╔══██╗██╔══██╗██║   ██║████╗  ██║██║ ██╔╝    ██╔══██╗██╔════╝██╔══██╗
+██║      ╚████╔╝ ██████╔╝█████╗  ██████╔╝██████╔╝██║   ██║██╔██╗ ██║█████╔╝     ██████╔╝█████╗  ██║  ██║
+██║       ╚██╔╝  ██╔══██╗██╔══╝  ██╔══██╗██╔═══╝ ██║   ██║██║╚██╗██║██╔═██╗     ██╔══██╗██╔══╝  ██║  ██║
+╚██████╗   ██║   ██████╔╝███████╗██║  ██║██║     ╚██████╔╝██║ ╚████║██║  ██╗    ██║  ██║███████╗██████╔╝
+ ╚═════╝   ╚═╝   ╚═════╝ ╚══════╝╚═╝  ╚═╝╚═╝      ╚═════╝ ╚═╝  ╚═══╝╚═╝  ╚═╝    ╚═╝  ╚═╝╚══════╝╚═════╝</pre>
+                        <div class="sm:hidden text-xl font-black tracking-wider text-cpRed flex items-center gap-2">
+                            <span>[ CYBERPUNK RED ]</span>
+                            <span class="text-cpYellow text-xs">::.::</span>
+                        </div>
+                        <p class="text-xs sm:text-sm text-gray-300 mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+                            <span class="text-cpYellow font-bold">&gt;&gt; КАЛЬКУЛЯТОР УРОНА И ТРАВМ</span>
+                            <span class="text-cpMuted">|</span>
+                            <span class="text-cpCyan">АВТО-ВЫЧИТАНИЕ БРОНИ (-1 ОС/ПОПАДАНИЕ)</span>
+                            <span class="text-cpMuted">|</span>
+                            <span class="text-gray-400">КОЛОДА ТРАВМ (#2D6 B / #2D6 H)</span>
+                        </p>
+                    </div>
+
+                    <!-- Панель управления терминалом -->
+                    <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+                        <button onclick="addCharacterCard()" 
+                            class="flex-1 sm:flex-initial bg-cpRed hover:bg-red-600 active:scale-95 text-white font-bold text-xs sm:text-sm px-3.5 py-2.5 rounded border border-white/20 shadow-[0_0_12px_rgba(255,0,60,0.5)] transition flex items-center justify-center gap-1.5">
+                            <span class="text-base leading-none">+</span>
+                            <span>ДОБАВИТЬ ЦЕЛЬ</span>
+                        </button>
+
+                        <button onclick="openDeckModal()" 
+                            class="flex-1 sm:flex-initial bg-cpCard hover:bg-cpGray text-cpYellow border border-cpYellow/60 font-bold text-xs sm:text-sm px-3 py-2.5 rounded transition flex items-center justify-center gap-1.5">
+                            <span>[▤]</span>
+                            <span>КОЛОДА ТРАВМ (<span id="deckCountBadge">22</span>)</span>
+                        </button>
+
+                        <button onclick="toggleCRT()" id="crtToggleBtn"
+                            class="bg-cpCard hover:bg-cpGray text-cpCyan border border-cpCyan/40 text-xs px-2.5 py-2.5 rounded transition"
+                            title="Переключить ЭЛТ-фильтр">
+                            [CRT: ВКЛ]
+                        </button>
+
+                        <button onclick="requestClearAll()" id="clearAllBtn"
+                            class="hidden bg-cpCard hover:bg-red-950 text-red-400 border border-red-800/60 text-xs px-2.5 py-2.5 rounded transition"
+                            title="Очистить все карточки">
+                            [СБРОС]
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Плашка подтверждения полного сброса (вместо системного confirm) -->
+                <div id="clearConfirmBar" class="hidden mt-3 p-2.5 bg-red-950/90 border border-cpRed rounded flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <span class="text-cpYellow font-bold">[!] ВНИМАНИЕ: Удалить все активные карточки противников с поля боя?</span>
+                    <div class="flex items-center gap-2">
+                        <button onclick="confirmClearAll()" class="bg-cpRed text-white font-bold px-3 py-1 rounded hover:bg-red-600">ДА, ОБНУЛИТЬ ПОЛЕ</button>
+                        <button onclick="cancelClearAll()" class="bg-cpCard text-gray-300 border border-gray-600 px-3 py-1 rounded hover:bg-gray-800">ОТМЕНА</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- ОСНОВНАЯ РАБОЧАЯ ОБЛАСТЬ: СЕТКА КАЛЬКУЛЯТОРОВ И КНОПКА "+" -->
+        <main class="flex-grow">
+            <!-- Статус-бар поля боя -->
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-3 px-1 text-xs text-cpMuted">
+                <div class="flex items-center gap-2">
+                    <span class="text-cpRed font-bold">╔══ СТАТУС ПОЛЯ БОЯ:</span>
+                    <span id="activeTargetsCounter" class="text-white font-bold bg-cpCard border border-cpGray px-2 py-0.5 rounded">АКТИВНЫХ ЦЕЛЕЙ: 0</span>
+                </div>
+                <div class="text-[11px] text-gray-400">
+                    <span>ПОДСКАЗКА: Нажмите <strong class="text-cpYellow">[ + ]</strong> чтобы добавить сколько угодно противников или персонажей</span>
+                </div>
+            </div>
+
+            <!-- Адаптивная сетка карточек калькулятора -->
+            <div id="calculatorsGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6 items-start">
+                <!-- Карточки противников рендерятся сюда динамически + Большая кнопка "+" -->
+            </div>
+        </main>
+
+        <!-- НИЖНИЙ ASCII ФУТЕР -->
+        <footer class="mt-10 pt-4 border-t border-cpGray/60 text-[11px] text-cpMuted flex flex-col sm:flex-row items-center justify-between gap-2">
+            <div>
+                <span class="text-cpRed font-bold">[:::]</span> CYBERPUNK RED COMBAT &amp; TRAUMA CALCULATOR // ASCII RESPONSIVE UI
+            </div>
+            <div class="flex items-center gap-3">
+                <span>ПОРОГ ТЯЖ. РАНЕНИЯ: &lt; 1/2 ПЗ (ОКРУГЛ. ВВЕРХ)</span>
+                <span class="text-cpYellow">::.::</span>
+                <span>ГОЛОВА: УРОН x2 (ТРЕЩИНА ЧЕРЕПА: x3)</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО: СПРАВОЧНИК «КОЛОДА ТРАВМЫ.PDF» -->
+    <div id="deckModal" class="fixed inset-0 z-50 hidden bg-black/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4">
+        <div class="bg-cpPanel border-2 border-cpRed rounded max-w-4xl w-full max-h-[90vh] flex flex-col shadow-[0_0_40px_rgba(255,0,60,0.35)]">
+            <!-- Шапка модалки -->
+            <div class="bg-cpRed text-cpBlack font-black px-3 sm:px-4 py-2.5 flex items-center justify-between">
+                <div class="flex items-center gap-2 text-xs sm:text-sm">
+                    <span class="bg-cpBlack text-cpRed px-1.5 py-0.5">PDF</span>
+                    <span>КОЛОДА ТРАВМЫ // ПОЛНЫЙ СПРАВОЧНИК (ГОЛОВА И ТЕЛО)</span>
+                </div>
+                <button onclick="closeDeckModal()" class="bg-cpBlack text-white hover:text-cpYellow px-2.5 py-0.5 text-xs font-bold rounded">
+                    [X] ЗАКРЫТЬ
+                </button>
+            </div>
+
+            <!-- Фильтры колоды -->
+            <div class="p-3 border-b border-cpGray flex flex-wrap items-center justify-between gap-2 bg-cpCard">
+                <div class="flex flex-wrap gap-1.5" id="deckFilterButtons">
+                    <button onclick="filterDeckModal('all')" data-filter="all" class="deck-filter-btn bg-cpRed text-white text-xs font-bold px-2.5 py-1.5 rounded">ВСЕ КАРТЫ (22)</button>
+                    <button onclick="filterDeckModal('body')" data-filter="body" class="deck-filter-btn bg-cpPanel text-gray-300 border border-cpGray text-xs font-bold px-2.5 py-1.5 rounded hover:border-cpRed">ТЕЛО #2D6 B (11)</button>
+                    <button onclick="filterDeckModal('head')" data-filter="head" class="deck-filter-btn bg-cpPanel text-gray-300 border border-cpGray text-xs font-bold px-2.5 py-1.5 rounded hover:border-cpRed">ГОЛОВА #2D6 H (11)</button>
+                    <button onclick="filterDeckModal('arms')" data-filter="arms" class="deck-filter-btn bg-cpPanel text-cpCyan border border-cpCyan/40 text-xs px-2 py-1.5 rounded hover:bg-cpCyan/10">РУКИ</button>
+                    <button onclick="filterDeckModal('legs')" data-filter="legs" class="deck-filter-btn bg-cpPanel text-cpCyan border border-cpCyan/40 text-xs px-2 py-1.5 rounded hover:bg-cpCyan/10">НОГИ</button>
+                    <button onclick="filterDeckModal('torso')" data-filter="torso" class="deck-filter-btn bg-cpPanel text-cpCyan border border-cpCyan/40 text-xs px-2 py-1.5 rounded hover:bg-cpCyan/10">КОРПУС</button>
+                </div>
+                <div class="text-[11px] text-cpYellow font-mono">
+                    :: Данные из «Колода травмы.pdf» ::
+                </div>
+            </div>
+
+            <!-- Список карт травм -->
+            <div id="deckModalContent" class="p-3 sm:p-4 overflow-y-auto grid grid-cols-1 md:grid-cols-2 gap-3">
+                <!-- Заполняется через JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- СКРИПТ ПРИЛОЖЕНИЯ -->
+    <script>
+        /**
+         * ============================================================================
+         * БАЗА ДАННЫХ КРИТИЧЕСКИХ ТРАВМ И РАНЕНИЙ ИЗ ФАЙЛА "Колода травмы.pdf"
+         * Разделена на 2 основные категории (Травмы Тела #2D6 B и Травмы Головы #2D6 H)
+         * а также привязана к прицельным зонам: руки (arms), ноги (legs), тело (torso), голова (head)
+         * ============================================================================
+         */
+        const TRAUMA_DECK = {
+            // КАТЕГОРИЯ 1: ТРАВМЫ ТЕЛА (#2D6 B)
+            body: [
+                {
+                    id: '2B',
+                    code: '#2D6(2)B',
+                    roll: 2,
+                    category: 'body',
+                    zones: ['arms'],
+                    zoneLabel: 'ТЕЛО // РУКИ',
+                    title: 'ОТОРВАННАЯ РУКА',
+                    symptoms: [
+                        'Оторванная рука потеряна.',
+                        'Все предметы, которые держит эта рука, немедленно выпадают.',
+                        'Штраф к спасброску от смерти +1'
+                    ],
+                    deathSavePenalty: 1,
+                    quickFix: 'НЕТ',
+                    treatment: 'Хирургия СЛ17'
+                },
+                {
+                    id: '3B',
+                    code: '#2D6(3)B',
+                    roll: 3,
+                    category: 'body',
+                    zones: ['arms'],
+                    zoneLabel: 'ТЕЛО // РУКИ',
+                    title: 'ОТОРВАННАЯ КИСТЬ',
+                    symptoms: [
+                        'Оторванная кисть потеряна.',
+                        'Все предметы, которые держит эта рука, немедленно выпадают.',
+                        'Штраф к спасброску от смерти +1'
+                    ],
+                    deathSavePenalty: 1,
+                    quickFix: 'НЕТ',
+                    treatment: 'Хирургия СЛ17'
+                },
+                {
+                    id: '4B',
+                    code: '#2D6(4)B',
+                    roll: 4,
+                    category: 'body',
+                    zones: ['torso'],
+                    zoneLabel: 'ТЕЛО // КОРПУС',
+                    title: 'РАЗРЫВ ЛЁГКОГО',
+                    symptoms: [
+                        '-2 к СКО (минимум 1)',
+                        'Штраф к спасброску от смерти +1'
+                    ],
+                    deathSavePenalty: 1,
+                    quickFix: 'Парамедицина СЛ15',
+                    treatment: 'Хирургия СЛ15'
+                },
+                {
+                    id: '5B',
+                    code: '#2D6(5)B',
+                    roll: 5,
+                    category: 'body',
+                    zones: ['torso'],
+                    zoneLabel: 'ТЕЛО // КОРПУС',
+                    title: 'ПЕРЕЛОМ РЁБЕР',
+                    symptoms: [
+                        'В конце каждого хода, если двигаешься дальше 4 м пешком, снова получаешь бонусный урон от этой критической травмы напрямую по ПЗ.'
+                    ],
+                    deathSavePenalty: 0,
+                    quickFix: 'Парамедицина СЛ13',
+                    treatment: 'Парамедицина СЛ15 или Хирургия СЛ13'
+                },
+                {
+                    id: '6B',
+                    code: '#2D6(6)B',
+                    roll: 6,
+                    category: 'body',
+                    zones: ['arms'],
+                    zoneLabel: 'ТЕЛО // РУКИ',
+                    title: 'ПЕРЕЛОМ РУКИ',
+                    symptoms: [
+                        'Сломанная рука бесполезна.',
+                        'Все предметы, которые держит эта рука, немедленно выпадают.'
+                    ],
+                    deathSavePenalty: 0,
+                    quickFix: 'Хирургия СЛ13',
+                    treatment: 'Парамедицина СЛ15 или Хирургия СЛ13'
+                },
+                {
+                    id: '7B',
+                    code: '#2D6(7)B',
+                    roll: 7,
+                    category: 'body',
+                    zones: ['torso'],
+                    zoneLabel: 'ТЕЛО // КОРПУС',
+                    title: 'ИНОРОДНОЕ ТЕЛО',
+                    symptoms: [
+                        'В конце каждого хода, если двигаешься дальше 4 м пешком, снова получаешь бонусный урон от этой критической травмы напрямую по ПЗ.'
+                    ],
+                    deathSavePenalty: 0,
+                    quickFix: 'Первая помощь СЛ13 или Хирургия СЛ13',
+                    treatment: 'Первая помощь устраняет травму'
+                },
+                {
+                    id: '8B',
+                    code: '#2D6(8)B',
+                    roll: 8,
+                    category: 'body',
+                    zones: ['legs'],
+                    zoneLabel: 'ТЕЛО // НОГИ',
+                    title: 'ПЕРЕЛОМ НОГИ',
+                    symptoms: [
+                        '-4 к СКО (минимум 1)'
+                    ],
+                    deathSavePenalty: 0,
+                    quickFix: 'Парамедицина СЛ13',
+                    treatment: 'Парамедицина СЛ15 или Хирургия СЛ13'
+                },
+                {
+                    id: '9B',
+                    code: '#2D6(9)B',
+                    roll: 9,
+                    category: 'body',
+                    zones: ['arms', 'legs', 'torso'],
+                    zoneLabel: 'ТЕЛО // МЫШЦЫ',
+                    title: 'РАЗРЫВ МЫШЦ',
+                    symptoms: [
+                        '-2 к атакам в рукопашном бою'
+                    ],
+                    deathSavePenalty: 0,
+                    quickFix: 'Первая помощь СЛ13 или Хирургия СЛ13',
+                    treatment: 'Первая помощь устраняет травму'
+                },
+                {
+                    id: '10B',
+                    code: '#2D6(10)B',
+                    roll: 10,
+                    category: 'body',
+                    zones: ['torso'],
+                    zoneLabel: 'ТЕЛО // КОРПУС',
+                    title: 'ТРАВМА ПОЗВОНОЧНИКА',
+                    symptoms: [
+                        'В следующий ход можно делать только действие перемещения.',
+                        'Штраф к спасброску от смерти +1'
+                    ],
+                    deathSavePenalty: 1,
+                    quickFix: 'Парамедицина СЛ15',
+                    treatment: 'Хирургия СЛ15'
+                },
+                {
+                    id: '11B',
+                    code: '#2D6(11)B',
+                    roll: 11,
+                    category: 'body',
+                    zones: ['arms'],
+                    zoneLabel: 'ТЕЛО // РУКИ',
+                    title: 'РАЗДРОБЛЕННЫЕ ПАЛЬЦЫ',
+                    symptoms: [
+                        'Оторванная рука потеряна.',
+                        'Все предметы, которые держит эта рука, немедленно выпадают.',
+                        'Штраф к спасброску от смерти +1'
+                    ],
+                    deathSavePenalty: 1,
+                    quickFix: 'Парамедицина СЛ13',
+                    treatment: 'Хирургия СЛ15'
+                },
+                {
+                    id: '12B',
+                    code: '#2D6(12)B',
+                    roll: 12,
+                    category: 'body',
+                    zones: ['legs'],
+                    zoneLabel: 'ТЕЛО // НОГИ',
+                    title: 'ОТОРВАННАЯ НОГА',
+                    symptoms: [
+                        'Оторванная нога потеряна.',
+                        '-6 к СКО (минимум 1).',
+                        'Нельзя уклоняться от атак.',
+                        'Штраф к спасброску от смерти +1'
+                    ],
+                    deathSavePenalty: 1,
+                    quickFix: 'НЕТ',
+                    treatment: 'Хирургия СЛ17'
+                }
+            ],
+
+            // КАТЕГОРИЯ 2: ТРАВМЫ ГОЛОВЫ (#2D6 H)
+            head: [
+                {
+                    id: '2H',
+                    code: '#2D6(2)H',
+                    roll: 2,
+                    category: 'head',
+                    zones: ['head'],
+                    zoneLabel: 'ГОЛОВА',
+                    title: 'ПОТЕРЯ ГЛАЗА',
+                    symptoms: [
+                        'Глаз потерян.',
+                        '-4 к дальнобойным атакам и проверкам восприятия, связанным со зрением.',
+                        'Штраф к спасброску от смерти +1'
+                    ],
+                    deathSavePenalty: 1,
+                    quickFix: 'НЕТ',
+                    treatment: 'Хирургия СЛ17'
+                },
+                {
+                    id: '3H',
+                    code: '#2D6(3)H',
+                    roll: 3,
+                    category: 'head',
+                    zones: ['head'],
+                    zoneLabel: 'ГОЛОВА',
+                    title: 'ТРАВМА МОЗГА',
+                    symptoms: [
+                        '-2 ко всем действиям',
+                        'Штраф к спасброску от смерти +1'
+                    ],
+                    deathSavePenalty: 1,
+                    quickFix: 'НЕТ',
+                    treatment: 'Хирургия СЛ17'
+                },
+                {
+                    id: '4H',
+                    code: '#2D6(4)H',
+                    roll: 4,
+                    category: 'head',
+                    zones: ['head'],
+                    zoneLabel: 'ГОЛОВА',
+                    title: 'ПОВРЕЖДЕНИЕ ГЛАЗА',
+                    symptoms: [
+                        '-2 к дальнобойным атакам и проверкам восприятия, связанным со зрением.'
+                    ],
+                    deathSavePenalty: 0,
+                    quickFix: 'Хирургия СЛ15',
+                    treatment: 'Хирургия СЛ13'
+                },
+                {
+                    id: '5H',
+                    code: '#2D6(5)H',
+                    roll: 5,
+                    category: 'head',
+                    zones: ['head'],
+                    zoneLabel: 'ГОЛОВА',
+                    title: 'СОТРЯСЕНИЕ',
+                    symptoms: [
+                        '-2 ко всем действиям'
+                    ],
+                    deathSavePenalty: 0,
+                    quickFix: 'Первая помощь СЛ13 или Хирургия СЛ13',
+                    treatment: 'Первая помощь устраняет травму'
+                },
+                {
+                    id: '6H',
+                    code: '#2D6(6)H',
+                    roll: 6,
+                    category: 'head',
+                    zones: ['head'],
+                    zoneLabel: 'ГОЛОВА',
+                    title: 'ПЕРЕЛОМ ЧЕЛЮСТИ',
+                    symptoms: [
+                        '-4 ко всем действиям, связанным с речью'
+                    ],
+                    deathSavePenalty: 0,
+                    quickFix: 'Парамедицина СЛ13',
+                    treatment: 'Первая помощь СЛ13 или Хирургия СЛ13'
+                },
+                {
+                    id: '7H',
+                    code: '#2D6(7)H',
+                    roll: 7,
+                    category: 'head',
+                    zones: ['head'],
+                    zoneLabel: 'ГОЛОВА',
+                    title: 'ИНОРОДНОЕ ТЕЛО (ГОЛОВА)',
+                    symptoms: [
+                        'В конце каждого хода, если двигаешься дальше 4 м пешком, снова получаешь бонусный урон от этой критической травмы напрямую по ПЗ.'
+                    ],
+                    deathSavePenalty: 0,
+                    quickFix: 'Первая помощь СЛ13 или Хирургия СЛ13',
+                    treatment: 'Первая помощь устраняет травму'
+                },
+                {
+                    id: '8H',
+                    code: '#2D6(8)H',
+                    roll: 8,
+                    category: 'head',
+                    zones: ['head'],
+                    zoneLabel: 'ГОЛОВА',
+                    title: 'ХЛЫСТОВАЯ ТРАВМА ШЕИ',
+                    symptoms: [
+                        'Штраф к спасброску от смерти +1'
+                    ],
+                    deathSavePenalty: 1,
+                    quickFix: 'Хирургия СЛ13',
+                    treatment: 'Первая помощь СЛ13 или Хирургия СЛ13'
+                },
+                {
+                    id: '9H',
+                    code: '#2D6(9)H',
+                    roll: 9,
+                    category: 'head',
+                    zones: ['head'],
+                    zoneLabel: 'ГОЛОВА',
+                    title: 'ТРЕЩИНА ЧЕРЕПА',
+                    symptoms: [
+                        'Урон от прицельных выстрелов в голову увеличивается до х3.',
+                        'Штраф к спасброску от смерти +1'
+                    ],
+                    deathSavePenalty: 1,
+                    quickFix: 'Парамедицина СЛ15',
+                    treatment: 'Парамедицина СЛ15 или Хирургия СЛ15'
+                },
+                {
+                    id: '10H',
+                    code: '#2D6(10)H',
+                    roll: 10,
+                    category: 'head',
+                    zones: ['head'],
+                    zoneLabel: 'ГОЛОВА',
+                    title: 'ПОВРЕЖДЕНИЕ УХА',
+                    symptoms: [
+                        'В конце каждого хода, если двигаешься дальше 4 м пешком, снова получаешь бонусный урон от этой критической травмы напрямую по ПЗ.'
+                    ],
+                    deathSavePenalty: 0,
+                    quickFix: 'Парамедицина СЛ13',
+                    treatment: 'Хирургия СЛ17'
+                },
+                {
+                    id: '11H',
+                    code: '#2D6(11)H',
+                    roll: 11,
+                    category: 'head',
+                    zones: ['head'],
+                    zoneLabel: 'ГОЛОВА',
+                    title: 'РАЗДАВЛЕННАЯ ТРАХЕЯ',
+                    symptoms: [
+                        'Ты не можешь говорить.',
+                        'Штраф к спасброску от смерти +1'
+                    ],
+                    deathSavePenalty: 1,
+                    quickFix: 'НЕТ',
+                    treatment: 'Хирургия СЛ17'
+                },
+                {
+                    id: '12H',
+                    code: '#2D6(12)H',
+                    roll: 12,
+                    category: 'head',
+                    zones: ['head'],
+                    zoneLabel: 'ГОЛОВА',
+                    title: 'ПОТЕРЯ УХА',
+                    symptoms: [
+                        'Ухо потеряно.',
+                        'В конце каждого хода, если двигаешься дальше 4 м пешком, снова получаешь бонусный урон от этой критической травмы напрямую по ПЗ.',
+                        '-4 к проверкам восприятия, связанным со слухом.',
+                        'Штраф к спасброску от смерти +1'
+                    ],
+                    deathSavePenalty: 1,
+                    quickFix: 'НЕТ',
+                    treatment: 'Хирургия СЛ17'
+                }
+            ]
+        };
+
+        /**
+         * СОСТОЯНИЕ ПРИЛОЖЕНИЯ
+         * Изначально массив персонажей пуст (согласно ТЗ: "Поле калькулятора изначально должно быть пустым, но будет кнопка + большая")
+         */
+        let characters = [];
+        let nextCharId = 1;
+        let crtEnabled = true;
+
+        /**
+         * Выбор случайной травмы по категории или части тела
+         * @param {string} targetType - 'body', 'head', 'arms', 'legs', 'torso'
+         */
+        function pickRandomInjury(targetType) {
+            let pool = [];
+            if (targetType === 'head') {
+                pool = TRAUMA_DECK.head;
+            } else if (targetType === 'body') {
+                pool = TRAUMA_DECK.body;
+            } else if (targetType === 'arms' || targetType === 'legs' || targetType === 'torso') {
+                pool = TRAUMA_DECK.body.filter(item => item.zones.includes(targetType));
+            } else {
+                pool = [...TRAUMA_DECK.body, ...TRAUMA_DECK.head];
+            }
+
+            const randomIndex = Math.floor(Math.random() * pool.length);
+            return pool[randomIndex];
+        }
+
+        /**
+         * Создание нового окна калькулятора с пустыми полями для ввода
+         */
+        function addCharacterCard() {
+            const newChar = {
+                id: nextCharId++,
+                name: '',
+                currentHp: '',
+                maxHp: '',
+                armor: '',
+                evasion: '',
+                isFlatlined: false, // Статус "ОБНУЛЁН #-000-"
+                injuries: [],       // Список полученных критических травм
+                combatLog: [],      // История попаданий
+                // Состояние подменю "Нанесение урона"
+                damageMenuOpen: false,
+                dmgInput: '',
+                heavyTraumaChecked: false,
+                heavyTraumaCategory: 'body', // 'body' | 'head'
+                aimedShotChecked: false,
+                aimedPart: 'head',           // 'arms' | 'legs' | 'torso' | 'head'
+                headFormulaMode: 'after_armor', // 'after_armor' = (Урон - Броня) * 2 | 'before_armor' = (Урон * 2) - Броня
+                pendingInjury: null          // Выпавшая случайная травма для предпросмотра перед нажатием ОК
+            };
+
+            characters.push(newChar);
+            renderAllCards();
+
+            // Плавный фокус на имя нового персонажа
+            setTimeout(() => {
+                const nameInput = document.getElementById(`char-name-${newChar.id}`);
+                if (nameInput) nameInput.focus();
+            }, 60);
+        }
+
+        /**
+         * Удаление карточки калькулятора
+         */
+        function removeCharacterCard(id) {
+            characters = characters.filter(c => c.id !== id);
+            renderAllCards();
+        }
+
+        /**
+         * Обновление основных полей карточки без полной перерисовки DOM (чтобы не терять фокус ввода)
+         */
+        function updateCharacterField(id, field, rawValue) {
+            const char = characters.find(c => c.id === id);
+            if (!char) return;
+
+            if (field === 'name') {
+                char.name = rawValue;
+                const headerTitle = document.getElementById(`card-header-title-${id}`);
+                if (headerTitle) {
+                    headerTitle.textContent = rawValue.trim() ? rawValue.toUpperCase() : `ЦЕЛЬ #${id}`;
+                }
+                return;
+            }
+
+            // Для числовых полей сохраняем пустую строку или число
+            const cleaned = rawValue === '' ? '' : parseInt(rawValue, 10);
+            char[field] = (cleaned !== '' && !isNaN(cleaned)) ? cleaned : '';
+
+            // Пересчитываем и обновляем индикатор половины здоровья и ранений
+            updateWoundStatusUI(char);
+
+            // Если открыто подменю урона — обновляем живой предпросмотр расчета
+            if (char.damageMenuOpen) {
+                updateDamagePreviewUI(char);
+            }
+        }
+
+        /**
+         * Быстрая кнопка синхронизации: Установить Нынешнее ПЗ равным Максимальному ПЗ
+         */
+        function syncCurrentToMaxHp(id) {
+            const char = characters.find(c => c.id === id);
+            if (!char || char.maxHp === '') return;
+            char.currentHp = char.maxHp;
+            char.isFlatlined = false;
+            const curInput = document.getElementById(`char-curhp-${id}`);
+            if (curInput) curInput.value = char.currentHp;
+            updateWoundStatusUI(char);
+            if (char.damageMenuOpen) updateDamagePreviewUI(char);
+        }
+
+        /**
+         * Переключение статуса "ОБНУЛЁН #-000-"
+         */
+        function toggleFlatline(id) {
+            const char = characters.find(c => c.id === id);
+            if (!char) return;
+            char.isFlatlined = !char.isFlatlined;
+            updateWoundStatusUI(char);
+        }
+
+        /**
+         * Вычисление половины здоровья и обновление визуальных индикаторов (Порог тяжелого ранения)
+         */
+        function updateWoundStatusUI(char) {
+            const halfContainer = document.getElementById(`half-hp-box-${char.id}`);
+            const halfValueText = document.getElementById(`half-hp-val-${char.id}`);
+            const woundStateBanner = document.getElementById(`wound-banner-${char.id}`);
+            const hpBarFill = document.getElementById(`hp-bar-fill-${char.id}`);
+            const cardRoot = document.getElementById(`calc-card-${char.id}`);
+
+            if (!halfContainer || !halfValueText || !woundStateBanner) return;
+
+            const hasMax = char.maxHp !== '' && !isNaN(char.maxHp) && Number(char.maxHp) > 0;
+            const hasCur = char.currentHp !== '' && !isNaN(char.currentHp);
+
+            const maxHpNum = hasMax ? Number(char.maxHp) : 0;
+            const curHpNum = hasCur ? Number(char.currentHp) : 0;
+
+            // Порог тяжелого ранения по правилам Cyberpunk RED (округляя вверх) + точная половина
+            const halfHpCeil = hasMax ? Math.ceil(maxHpNum / 2) : 0;
+            const exactHalf = hasMax ? (maxHpNum / 2) : 0;
+
+            if (!hasMax) {
+                halfValueText.innerHTML = `<span class="text-cpMuted">ВВЕДИТЕ МАКС. ПЗ</span>`;
+            } else {
+                const exactNote = (maxHpNum % 2 !== 0) ? ` <span class="text-[10px] text-gray-400">(точн. ${exactHalf})</span>` : '';
+                halfValueText.innerHTML = `<span class="text-base font-extrabold">${halfHpCeil} ПЗ</span>${exactNote}`;
+            }
+
+            // Полоска здоровья
+            if (hpBarFill) {
+                if (hasMax && hasCur) {
+                    const pct = Math.max(0, Math.min(100, Math.round((curHpNum / maxHpNum) * 100)));
+                    hpBarFill.style.width = `${pct}%`;
+                    if (curHpNum < 1) {
+                        hpBarFill.className = 'h-full bg-cpRed transition-all duration-300';
+                    } else if (curHpNum <= halfHpCeil) {
+                        hpBarFill.className = 'h-full bg-cpYellow transition-all duration-300';
+                    } else {
+                        hpBarFill.className = 'h-full bg-cpGreen transition-all duration-300';
+                    }
+                } else {
+                    hpBarFill.style.width = '0%';
+                }
+            }
+
+            // Проверка: Дошло ли нынешнее здоровье до половины от максимального?
+            const isHalfReached = hasMax && hasCur && curHpNum <= halfHpCeil;
+            const isMortal = hasMax && hasCur && curHpNum < 1;
+
+            // Сброс классов свечения блока половины здоровья
+            halfContainer.classList.remove('heavy-wound-active', 'mortal-wound-active', 'border-cpGray', 'bg-cpPanel');
+
+            if (char.isFlatlined) {
+                // Карта #54: ОБНУЛЁН (#-000-)
+                halfContainer.classList.add('mortal-wound-active');
+                woundStateBanner.innerHTML = `
+                    <div class="mt-2 p-2.5 bg-black border-2 border-cpRed rounded text-xs">
+                        <div class="flex items-center justify-between font-black text-cpRed">
+                            <span>[💀 ОБНУЛЁН // КОД #-000-]</span>
+                            <button onclick="toggleFlatline(${char.id})" class="text-[10px] underline text-gray-400 hover:text-white">ВЕРНУТЬ В БОЙ</button>
+                        </div>
+                        <div class="text-white font-bold mt-1">ЭФФЕКТ РАНЕНИЯ: ТЫ МЁРТВ.</div>
+                        <div class="text-cpYellow text-[11px] mt-0.5">Стабилизация: Без шансов. Проверь карманы пациента!</div>
+                    </div>
+                `;
+            } else if (isMortal) {
+                // Карта #47: СМЕРТЕЛЬНОЕ РАНЕНИЕ (#<1ПЗ) + Половина здоровья горит
+                halfContainer.classList.add('mortal-wound-active');
+                woundStateBanner.innerHTML = `
+                    <div class="mt-2 p-2.5 bg-red-950/80 border-2 border-cpRed rounded text-xs shadow-[0_0_15px_rgba(255,0,60,0.4)]">
+                        <div class="flex items-center justify-between font-black text-cpYellow">
+                            <span>[⚡ СМЕРТЕЛЬНОЕ РАНЕНИЕ // КОД #&lt;1ПЗ]</span>
+                            <span class="text-cpRed animate-pulse">ПЗ &lt; 1</span>
+                        </div>
+                        <ul class="list-disc list-inside text-[11px] text-gray-200 mt-1 space-y-0.5">
+                            <li><strong class="text-white">-4 ко всем действиям</strong>, <strong class="text-white">-6 к СКО</strong> (мин. 1)</li>
+                            <li>Спасбросок от смерти в начале каждого своего хода</li>
+                            <li>Криттравма и штраф к спасброску +1 при уроне от оружия</li>
+                            <li class="text-cpCyan">Стабилизация: СЛ15 (Первая помощь / Парамедицина) &rarr; 1 ПЗ</li>
+                        </ul>
+                        <div class="mt-2 flex justify-end">
+                            <button onclick="toggleFlatline(${char.id})" class="bg-cpRed hover:bg-red-700 text-white font-bold text-[11px] px-2.5 py-1 rounded">
+                                [ПРОВАЛЕН СПАСБРОСОК &rarr; ОБНУЛЁН #-000-]
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (isHalfReached) {
+                // ЗАГОРАЕТСЯ ИНДИКАТОР ПОЛОВИНЫ ЗДОРОВЬЯ (Карта #46: ТЯЖЁЛОЕ РАНЕНИЕ #<50>0)
+                halfContainer.classList.add('heavy-wound-active');
+                woundStateBanner.innerHTML = `
+                    <div class="mt-2 p-2.5 bg-cpRed/20 border border-cpYellow rounded text-xs">
+                        <div class="flex items-center justify-between font-extrabold text-cpYellow">
+                            <span>[🔥 ТЯЖЁЛОЕ РАНЕНИЕ // ПОЛОВИНА ПЗ ДОСТИГНУТА!]</span>
+                            <span class="font-mono text-[11px] bg-cpBlack px-1.5 py-0.5 rounded text-cpRed">#&lt;50&gt;0</span>
+                        </div>
+                        <div class="text-white font-bold text-[11px] mt-1">
+                            Эффект ранения: <span class="text-cpYellow underline">-2 ко всем действиям</span>
+                        </div>
+                        <div class="text-gray-300 text-[11px] mt-0.5">
+                            Стабилизация: <span class="text-cpCyan">СЛ13 (Первая помощь или Парамедицина)</span>
+                        </div>
+                    </div>
+                `;
+            } else if (hasMax && hasCur && curHpNum < maxHpNum) {
+                // Карта #45: ЛЁГКОЕ РАНЕНИЕ (#<100>49)
+                halfContainer.classList.add('border-cpGray', 'bg-cpPanel');
+                woundStateBanner.innerHTML = `
+                    <div class="mt-2 px-2.5 py-1.5 bg-cpPanel border border-cpGray rounded text-[11px] flex flex-wrap items-center justify-between gap-1">
+                        <span class="text-cpCyan font-bold">[ЛЁГКОЕ РАНЕНИЕ #&lt;100&gt;49]</span>
+                        <span class="text-gray-400">Эффект: Нет | Стабилизация: СЛ10</span>
+                    </div>
+                `;
+            } else {
+                halfContainer.classList.add('border-cpGray', 'bg-cpPanel');
+                woundStateBanner.innerHTML = '';
+            }
+
+            // Подсветка самого текста в блоке половины здоровья
+            const halfAlertBadge = document.getElementById(`half-alert-pill-${char.id}`);
+            if (halfAlertBadge) {
+                if (isHalfReached) {
+                    halfAlertBadge.className = 'px-2 py-0.5 text-[10px] font-black rounded bg-cpYellow text-cpBlack animate-bounce';
+                    halfAlertBadge.textContent = 'АКТИВНО!';
+                } else {
+                    halfAlertBadge.className = 'px-2 py-0.5 text-[10px] font-bold rounded bg-cpCard text-cpMuted border border-cpGray';
+                    halfAlertBadge.textContent = 'НОРМА';
+                }
+            }
+
+            if (cardRoot) {
+                if (isHalfReached) {
+                    cardRoot.classList.add('border-cpYellow');
+                } else {
+                    cardRoot.classList.remove('border-cpYellow');
+                }
+            }
+        }
+
+        /**
+         * ============================================================================
+         * ПОДМЕНЮ "НАНЕСЕНИЕ УРОНА" И РАСЧЕТ УРОНА / БРОНИ / ТРАВМ
+         * ============================================================================
+         */
+        function openDamageSubmenu(id) {
+            const char = characters.find(c => c.id === id);
+            if (!char) return;
+
+            char.damageMenuOpen = true;
+            char.dmgInput = '';
+            char.heavyTraumaChecked = false;
+            char.heavyTraumaCategory = 'body';
+            char.aimedShotChecked = false;
+            char.aimedPart = 'head';
+            char.pendingInjury = null;
+
+            renderAllCards();
+
+            setTimeout(() => {
+                const dmgField = document.getElementById(`dmg-input-${id}`);
+                if (dmgField) dmgField.focus();
+            }, 50);
+        }
+
+        function closeDamageSubmenu(id) {
+            const char = characters.find(c => c.id === id);
+            if (!char) return;
+            char.damageMenuOpen = false;
+            char.dmgInput = '';
+            char.pendingInjury = null;
+            renderAllCards();
+        }
+
+        function onDamageInputChange(id, val) {
+            const char = characters.find(c => c.id === id);
+            if (!char) return;
+            char.dmgInput = val === '' ? '' : parseInt(val, 10);
+            updateDamagePreviewUI(char);
+        }
+
+        /**
+         * Переключение галочки "Тяжелая травма?"
+         */
+        function toggleHeavyTrauma(id, checked) {
+            const char = characters.find(c => c.id === id);
+            if (!char) return;
+            char.heavyTraumaChecked = checked;
+            syncPendingInjury(char);
+            renderAllCards();
+        }
+
+        /**
+         * Смена категории тяжелой травмы: 'body' (Тело) или 'head' (Голова)
+         */
+        function setHeavyTraumaCategory(id, category) {
+            const char = characters.find(c => c.id === id);
+            if (!char) return;
+            char.heavyTraumaCategory = category;
+            syncPendingInjury(char);
+            renderAllCards();
+        }
+
+        /**
+         * Переключение галочки "Прицельный выстрел?"
+         */
+        function toggleAimedShot(id, checked) {
+            const char = characters.find(c => c.id === id);
+            if (!char) return;
+            char.aimedShotChecked = checked;
+            syncPendingInjury(char);
+            renderAllCards();
+        }
+
+        /**
+         * Выбор части тела при прицельном выстреле: 'arms' (Руки), 'legs' (Ноги), 'torso' (Тело), 'head' (Голова)
+         */
+        function setAimedPart(id, part) {
+            const char = characters.find(c => c.id === id);
+            if (!char) return;
+            char.aimedPart = part;
+            // Синхронизируем категорию тяжелой травмы, если обе галочки включены
+            if (part === 'head') {
+                char.heavyTraumaCategory = 'head';
+            } else {
+                char.heavyTraumaCategory = 'body';
+            }
+            syncPendingInjury(char);
+            renderAllCards();
+        }
+
+        /**
+         * Переключение режима удвоения урона в голову
+         */
+        function toggleHeadFormulaMode(id) {
+            const char = characters.find(c => c.id === id);
+            if (!char) return;
+            char.headFormulaMode = char.headFormulaMode === 'after_armor' ? 'before_armor' : 'after_armor';
+            updateDamagePreviewUI(char);
+        }
+
+        /**
+         * Генерация/переброс случайной травмы согласно выбранным галочкам
+         */
+        function syncPendingInjury(char) {
+            if (char.aimedShotChecked) {
+                // Прицельный выстрел дает случайную травму конкретной выбранной категории тела
+                char.pendingInjury = pickRandomInjury(char.aimedPart);
+            } else if (char.heavyTraumaChecked) {
+                // Тяжелая травма выбирает случайную травму из категории Головы или Тела
+                char.pendingInjury = pickRandomInjury(char.heavyTraumaCategory);
+            } else {
+                char.pendingInjury = null;
+            }
+        }
+
+        function rerollPendingInjury(id) {
+            const char = characters.find(c => c.id === id);
+            if (!char) return;
+            syncPendingInjury(char);
+            renderAllCards();
+        }
+
+        /**
+         * Расчет урона, вычитания брони и износа брони на 1 единицу
+         */
+        function calculateHitMath(char) {
+            const rawDiceDmg = (char.dmgInput !== '' && !isNaN(char.dmgInput)) ? Math.max(0, Number(char.dmgInput)) : 0;
+            const currentArmor = (char.armor !== '' && !isNaN(char.armor)) ? Math.max(0, Number(char.armor)) : 0;
+            const currentHp = (char.currentHp !== '' && !isNaN(char.currentHp)) ? Number(char.currentHp) : 0;
+
+            // Проверяем, есть ли у персонажа активная травма "ТРЕЩИНА ЧЕРЕПА" (#2D6(9)H), которая увеличивает множитель головы до x3
+            const hasCrackedSkull = char.injuries.some(inj => inj.id === '9H');
+            const isHeadshot = char.aimedShotChecked && char.aimedPart === 'head';
+            const headMultiplier = isHeadshot ? (hasCrackedSkull ? 3 : 2) : 1;
+
+            let finalHpDamage = 0;
+            let formulaDescription = '';
+
+            if (isHeadshot) {
+                if (char.headFormulaMode === 'after_armor') {
+                    // Стандарт Cyberpunk RED: (Урон - Броня) * Множитель
+                    constpenetrating = Math.max(0, rawDiceDmg - currentArmor);
+                    finalHpDamage = constpenetrating * headMultiplier;
+                    formulaDescription = `max(0, ${rawDiceDmg} [Кубики] - ${currentArmor} [Броня]) × ${headMultiplier} [Голова] = ${finalHpDamage}`;
+                } else {
+                    // Альтернативный вариант: (Урон * Множитель) - Броня
+                    const multipliedRaw = rawDiceDmg * headMultiplier;
+                    finalHpDamage = Math.max(0, multipliedRaw - currentArmor);
+                    formulaDescription = `max(0, (${rawDiceDmg} [Кубики] × ${headMultiplier} [Голова]) - ${currentArmor} [Броня]) = ${finalHpDamage}`;
+                }
+            } else {
+                finalHpDamage = Math.max(0, rawDiceDmg - currentArmor);
+                formulaDescription = `max(0, ${rawDiceDmg} [Кубики] - ${currentArmor} [Броня]) = ${finalHpDamage}`;
+            }
+
+            // По условию задачи: "при этом сама броня становится на 1 меньше с каждым попаданием"
+            const newArmor = rawDiceDmg > 0 ? Math.max(0, currentArmor - 1) : currentArmor;
+            const newHp = currentHp - finalHpDamage;
+
+            return {
+                rawDiceDmg,
+                currentArmor,
+                newArmor,
+                currentHp,
+                newHp,
+                finalHpDamage,
+                isHeadshot,
+                headMultiplier,
+                hasCrackedSkull,
+                formulaDescription
+            };
+        }
+
+        /**
+         * Живое обновление предпросмотра урона в подменю
+         */
+        function updateDamagePreviewUI(char) {
+            const previewBox = document.getElementById(`dmg-preview-box-${char.id}`);
+            if (!previewBox) return;
+
+            const math = calculateHitMath(char);
+
+            previewBox.innerHTML = `
+                <div class="flex flex-wrap items-center justify-between gap-1 text-[11px] text-gray-300 border-b border-cpGray/70 pb-1.5 mb-1.5">
+                    <span>Формула просчета:</span>
+                    <span class="font-mono text-cpCyan font-bold">${math.formulaDescription}</span>
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div class="bg-cpBlack/80 p-1.5 rounded border border-cpGray">
+                        <div class="text-[10px] text-cpMuted">ИТОГОВЫЙ УРОН В ПЗ</div>
+                        <div class="text-sm sm:text-base font-black text-cpRed">-${math.finalHpDamage}</div>
+                    </div>
+                    <div class="bg-cpBlack/80 p-1.5 rounded border border-cpGray">
+                        <div class="text-[10px] text-cpMuted">БРОНЯ (ОС -1)</div>
+                        <div class="text-sm sm:text-base font-black text-cpCyan">${math.currentArmor} &rarr; ${math.newArmor}</div>
+                    </div>
+                    <div class="bg-cpBlack/80 p-1.5 rounded border border-cpGray">
+                        <div class="text-[10px] text-cpMuted">ОСТАТОК ПЗ</div>
+                        <div class="text-sm sm:text-base font-black ${math.newHp <= Math.ceil((Number(char.maxHp) || 0) / 2) ? 'text-cpYellow' : 'text-cpGreen'}">
+                            ${char.currentHp === '' ? '?' : math.currentHp} &rarr; ${math.newHp}
+                        </div>
+                    </div>
+                </div>
+                ${math.isHeadshot ? `
+                    <div class="mt-2 flex items-center justify-between gap-2 text-[10px] bg-cpRed/15 border border-cpRed/40 px-2 py-1 rounded">
+                        <span class="text-cpYellow font-bold">🎯 ВЫСТРЕЛ В ГОЛОВУ (УРОН ×${math.headMultiplier}${math.hasCrackedSkull ? ' — ТРЕЩИНА ЧЕРЕПА!' : ''})</span>
+                        <button type="button" onclick="toggleHeadFormulaMode(${char.id})" class="underline text-cpCyan hover:text-white">
+                            [Сменить порядок: ${char.headFormulaMode === 'after_armor' ? '(Урон-Броня)×2' : 'Урон×2-Броня'}]
+                        </button>
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        /**
+         * Нажатие кнопки "ОК" в подменю нанесения урона
+         */
+        function applyDamageConfirm(id) {
+            const char = characters.find(c => c.id === id);
+            if (!char) return;
+
+            // Если максимальное здоровье введено, а нынешнее еще было пустым — берем за стартовую точку максимальное
+            if (char.currentHp === '' && char.maxHp !== '') {
+                char.currentHp = Number(char.maxHp);
+            } else if (char.currentHp === '') {
+                char.currentHp = 0;
+            }
+
+            if (char.armor === '') {
+                char.armor = 0;
+            }
+
+            const math = calculateHitMath(char);
+
+            // Обновляем здоровье и уменьшаем броню на 1 с попаданием
+            char.currentHp = math.newHp;
+            char.armor = math.newArmor;
+
+            // Если была выбрана "Тяжелая травма?" или "Прицельный выстрел?" — добавляем выпавшую травму персонажу
+            let addedInjuryText = '';
+            if (char.heavyTraumaChecked || char.aimedShotChecked) {
+                if (!char.pendingInjury) {
+                    syncPendingInjury(char);
+                }
+                if (char.pendingInjury) {
+                    const injuryInstance = {
+                        ...char.pendingInjury,
+                        instanceId: Date.now() + Math.random(),
+                        timestamp: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+                    };
+                    char.injuries.unshift(injuryInstance);
+                    addedInjuryText = ` + ТРАВМА: ${injuryInstance.title} (${injuryInstance.code})`;
+                }
+            }
+
+            // Записываем событие в боевой лог карточки
+            const zoneNames = { arms: 'Руки', legs: 'Ноги', torso: 'Тело', head: 'Голова (x' + math.headMultiplier + ')' };
+            const hitZoneTag = char.aimedShotChecked ? `[Прицельно: ${zoneNames[char.aimedPart]}]` : '[Обычное попадание]';
+            char.combatLog.unshift({
+                time: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+                text: `${hitZoneTag} Кубики: ${math.rawDiceDmg} | В ПЗ: -${math.finalHpDamage} (ПЗ: ${char.currentHp}) | Броня: ${math.currentArmor}&rarr;${char.armor}${addedInjuryText}`
+            });
+
+            // Оставляем последние 8 записей лога
+            if (char.combatLog.length > 8) char.combatLog.pop();
+
+            // Закрываем подменю
+            char.damageMenuOpen = false;
+            char.dmgInput = '';
+            char.pendingInjury = null;
+
+            renderAllCards();
+        }
+
+        /**
+         * Удаление (излечение) травмы со списка персонажа
+         */
+        function removeInjuryFromChar(charId, instanceId) {
+            const char = characters.find(c => c.id === charId);
+            if (!char) return;
+            char.injuries = char.injuries.filter(inj => inj.instanceId !== instanceId);
+            renderAllCards();
+        }
+
+        /**
+         * ============================================================================
+         * РЕНДЕРИНГ ВСЕХ КАРТОЧЕК И БОЛЬШОЙ КНОПКИ "+"
+         * ============================================================================
+         */
+        function renderAllCards() {
+            const grid = document.getElementById('calculatorsGrid');
+            const counter = document.getElementById('activeTargetsCounter');
+            const clearBtn = document.getElementById('clearAllBtn');
+
+            if (counter) {
+                counter.textContent = `АКТИВНЫХ ЦЕЛЕЙ: ${characters.length}`;
+            }
+            if (clearBtn) {
+                if (characters.length > 0) {
+                    clearBtn.classList.remove('hidden');
+                } else {
+                    clearBtn.classList.add('hidden');
+                    cancelClearAll();
+                }
+            }
+
+            let html = '';
+
+            // 1. Рендерим каждую карточку персонажа / противника
+            characters.forEach((char, idx) => {
+                const totalDeathPenalty = char.injuries.reduce((sum, item) => sum + (item.deathSavePenalty || 0), 0);
+
+                html += `
+                <article id="calc-card-${char.id}" class="cp-card-frame rounded p-3.5 sm:p-4 flex flex-col justify-between transition-all">
+                    <!-- ВЕРХНЯЯ ASCII-ШАПКА КАРТОЧКИ -->
+                    <div>
+                        <div class="flex items-center justify-between gap-2 pb-2 mb-3 border-b border-cpRed/50">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <span class="bg-cpRed text-cpBlack font-black text-xs px-1.5 py-0.5 rounded-sm shrink-0">#${idx + 1}</span>
+                                <h2 id="card-header-title-${char.id}" class="font-extrabold text-sm sm:text-base text-cpYellow truncate">
+                                    ${char.name.trim() ? escapeHtml(char.name.toUpperCase()) : `ЦЕЛЬ #${char.id}`}
+                                </h2>
+                            </div>
+                            <div class="flex items-center gap-1.5 shrink-0">
+                                <span class="text-[10px] text-cpMuted font-mono hidden sm:inline">::.::</span>
+                                <button onclick="removeCharacterCard(${char.id})" 
+                                    class="text-xs bg-cpBlack hover:bg-cpRed hover:text-white text-gray-400 border border-cpGray px-2 py-0.5 rounded transition"
+                                    title="Удалить карточку">
+                                    [X]
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- ПОЛЕ 1: ИМЯ ПЕРСОНАЖА -->
+                        <div class="mb-3">
+                            <label for="char-name-${char.id}" class="block text-[11px] font-bold text-cpCyan uppercase tracking-wider mb-1">
+                                &gt; ИМЯ ПЕРСОНАЖА / ПРОТИВНИКА:
+                            </label>
+                            <input id="char-name-${char.id}" type="text" 
+                                value="${escapeHtml(char.name)}"
+                                oninput="updateCharacterField(${char.id}, 'name', this.value)"
+                                placeholder="Впишите имя или позывной..."
+                                class="w-full bg-cpBlack border border-cpGray focus:border-cpCyan focus:outline-none rounded px-3 py-2 text-sm font-bold text-white placeholder-gray-600 transition" />
+                        </div>
+
+                        <!-- ПОЛЯ 2 И 3: НЫНЕШНЕЕ ЗДОРОВЬЕ И МАКСИМАЛЬНОЕ ЗДОРОВЬЕ -->
+                        <div class="p-2.5 bg-cpBlack/70 border border-cpGray rounded mb-3">
+                            <div class="flex items-center justify-between mb-1.5">
+                                <span class="text-[11px] font-bold text-cpGreen uppercase tracking-wider">
+                                    [+] ПУНКТЫ ЗДОРОВЬЯ (ПЗ):
+                                </span>
+                                <button type="button" onclick="syncCurrentToMaxHp(${char.id})" 
+                                    class="text-[10px] text-cpCyan hover:text-cpYellow underline"
+                                    title="Приравнять нынешнее здоровье к максимальному">
+                                    [= Сбросить до Макс. ПЗ]
+                                </button>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-2.5">
+                                <!-- Нынешнее здоровье -->
+                                <div>
+                                    <label for="char-curhp-${char.id}" class="block text-[10px] text-gray-400 mb-1">НЫНЕШНЕЕ ЗДОРОВЬЕ</label>
+                                    <input id="char-curhp-${char.id}" type="number"
+                                        value="${char.currentHp}"
+                                        oninput="updateCharacterField(${char.id}, 'currentHp', this.value)"
+                                        placeholder="0"
+                                        class="w-full bg-cpPanel border border-cpGreen/50 focus:border-cpGreen focus:outline-none rounded px-2.5 py-2 text-center text-base sm:text-lg font-extrabold text-white placeholder-gray-700" />
+                                </div>
+                                <!-- Максимальное здоровье -->
+                                <div>
+                                    <label for="char-maxhp-${char.id}" class="block text-[10px] text-gray-400 mb-1">МАКСИМАЛЬНОЕ ПЗ</label>
+                                    <input id="char-maxhp-${char.id}" type="number"
+                                        value="${char.maxHp}"
+                                        oninput="updateCharacterField(${char.id}, 'maxHp', this.value)"
+                                        placeholder="0"
+                                        class="w-full bg-cpPanel border border-cpGray focus:border-cpYellow focus:outline-none rounded px-2.5 py-2 text-center text-base sm:text-lg font-extrabold text-gray-200 placeholder-gray-700" />
+                                </div>
+                            </div>
+
+                            <!-- Полоска индикации ПЗ -->
+                            <div class="w-full h-1.5 bg-cpGray rounded-full overflow-hidden mt-2.5">
+                                <div id="hp-bar-fill-${char.id}" class="h-full bg-cpGreen transition-all duration-300" style="width: 0%"></div>
+                            </div>
+
+                            <!-- АВТОМАТИЧЕСКАЯ ПОЛОВИНА ЗДОРОВЬЯ (ЗАГОРАЕТСЯ ПРИ ДОСТИЖЕНИИ) -->
+                            <div id="half-hp-box-${char.id}" class="mt-2.5 p-2 rounded border border-cpGray bg-cpPanel flex items-center justify-between transition-all">
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-cpRed font-bold text-xs">[1/2]</span>
+                                    <span class="text-[11px] font-bold text-gray-300">ПОЛОВИНА МАКС. ПЗ (ПОРОГ):</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div id="half-hp-val-${char.id}" class="text-xs font-bold text-cpYellow">ВВЕДИТЕ МАКС. ПЗ</div>
+                                    <span id="half-alert-pill-${char.id}" class="px-2 py-0.5 text-[10px] font-bold rounded bg-cpCard text-cpMuted border border-cpGray">НОРМА</span>
+                                </div>
+                            </div>
+
+                            <!-- Баннер состояния ранения (Тяжелое / Смертельное / Обнулён) -->
+                            <div id="wound-banner-${char.id}"></div>
+                        </div>
+
+                        <!-- ПОЛЯ 4 И 5: КОЛ-ВО БРОНИ И НАВЫК УКЛОНЕНИЯ -->
+                        <div class="grid grid-cols-2 gap-2.5 mb-3">
+                            <!-- Броня -->
+                            <div class="p-2.5 bg-cpBlack/70 border border-cpGray rounded">
+                                <label for="char-armor-${char.id}" class="block text-[10px] font-bold text-cpCyan uppercase mb-1">
+                                    [🛡] КОЛ-ВО БРОНИ (ОС):
+                                </label>
+                                <input id="char-armor-${char.id}" type="number" min="0"
+                                    value="${char.armor}"
+                                    oninput="updateCharacterField(${char.id}, 'armor', this.value)"
+                                    placeholder="0"
+                                    class="w-full bg-cpPanel border border-cpCyan/40 focus:border-cpCyan focus:outline-none rounded px-2.5 py-1.5 text-center text-base font-extrabold text-cpCyan placeholder-gray-700" />
+                                <div class="text-[9px] text-cpMuted mt-1 text-center">-1 ОС за каждое попадание</div>
+                            </div>
+
+                            <!-- Уклонение -->
+                            <div class="p-2.5 bg-cpBlack/70 border border-cpGray rounded">
+                                <label for="char-evasion-${char.id}" class="block text-[10px] font-bold text-cpYellow uppercase mb-1">
+                                    [⚡] НАВЫК УКЛОНЕНИЕ:
+                                </label>
+                                <input id="char-evasion-${char.id}" type="number" min="0"
+                                    value="${char.evasion}"
+                                    oninput="updateCharacterField(${char.id}, 'evasion', this.value)"
+                                    placeholder="0"
+                                    class="w-full bg-cpPanel border border-cpYellow/40 focus:border-cpYellow focus:outline-none rounded px-2.5 py-1.5 text-center text-base font-extrabold text-cpYellow placeholder-gray-700" />
+                                <div class="text-[9px] text-cpMuted mt-1 text-center">Уклонение от атак</div>
+                            </div>
+                        </div>
+
+                        <!-- КНОПКА "НАНЕСЕНИЕ УРОНА" ИЛИ ОТКРЫТАЯ ПОДМЕНЮШКА -->
+                        ${!char.damageMenuOpen ? `
+                            <button type="button" onclick="openDamageSubmenu(${char.id})"
+                                class="w-full bg-cpRed hover:bg-red-600 active:scale-[0.99] text-white font-black text-xs sm:text-sm py-3 px-4 rounded border border-white/25 shadow-[0_0_15px_rgba(255,0,60,0.4)] transition flex items-center justify-center gap-2 tracking-wider uppercase">
+                                <span>[💥 НАНЕСЕНИЕ УРОНА ]</span>
+                            </button>
+                        ` : renderDamageSubmenuHTML(char)}
+
+                        <!-- СПИСОК АКТИВНЫХ ТРАВМ ПЕРСОНАЖА (ИЗ "КОЛОДА ТРАВМЫ.PDF") -->
+                        <div class="mt-3 pt-3 border-t border-cpGray/80">
+                            <div class="flex items-center justify-between text-xs mb-2">
+                                <span class="font-bold text-cpRed flex items-center gap-1.5">
+                                    <span>[::] АКТИВНЫЕ ТРАВМЫ (${char.injuries.length})</span>
+                                </span>
+                                ${totalDeathPenalty > 0 ? `
+                                    <span class="bg-cpRed/20 border border-cpRed text-cpYellow text-[10px] font-bold px-2 py-0.5 rounded">
+                                        ШТРАФ СПАСБРОСКА ОТ СМЕРТИ: +${totalDeathPenalty}
+                                    </span>
+                                ` : ''}
+                            </div>
+
+                            ${char.injuries.length === 0 ? `
+                                <div class="text-[11px] text-cpMuted bg-cpBlack/40 border border-dashed border-cpGray rounded p-2 text-center">
+                                    Критических травм нет
+                                </div>
+                            ` : `
+                                <div class="space-y-2 max-h-64 overflow-y-auto pr-1">
+                                    ${char.injuries.map(inj => renderInjuryCardItemHTML(char.id, inj)).join('')}
+                                </div>
+                            `}
+                        </div>
+
+                        <!-- МИНИ-ЛОГ ПОПАДАНИЙ -->
+                        ${char.combatLog.length > 0 ? `
+                            <details class="mt-2.5 text-[11px] bg-cpBlack/60 border border-cpGray rounded p-2">
+                                <summary class="cursor-pointer text-cpMuted hover:text-white font-bold select-none">
+                                    &gt; ИСТОРИЯ ПОПАДАНИЙ (${char.combatLog.length})
+                                </summary>
+                                <div class="mt-1.5 space-y-1 text-[10px] text-gray-300 font-mono max-h-28 overflow-y-auto">
+                                    ${char.combatLog.map(entry => `
+                                        <div class="border-b border-cpGray/40 pb-1">
+                                            <span class="text-cpMuted">[${entry.time}]</span> ${entry.text}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </details>
+                        ` : ''}
+                    </div>
+                </article>
+                `;
+            });
+
+            // 2. БОЛЬШАЯ КНОПКА "+" ДЛЯ ДОБАВЛЕНИЯ НОВОГО ПОЛЯ КАЛЬКУЛЯТОРА
+            html += `
+                <button type="button" onclick="addCharacterCard()"
+                    class="group min-h-[280px] sm:min-h-[340px] w-full border-2 border-dashed border-cpRed/70 hover:border-cpYellow bg-cpPanel/50 hover:bg-cpRed/10 rounded p-6 flex flex-col items-center justify-center text-center transition-all duration-200 shadow-[0_0_20px_rgba(255,0,60,0.08)] hover:shadow-[0_0_30px_rgba(252,238,10,0.2)] cursor-pointer">
+                    
+                    <pre class="text-[10px] leading-none text-cpRed group-hover:text-cpYellow mb-3 select-none transition-colors">
+╔═══════════════════════╗
+║   + НОВЫЙ ПРОТИВНИК   ║
+╚═══════════════════════╝</pre>
+
+                    <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-2 border-cpRed group-hover:border-cpYellow bg-cpBlack flex items-center justify-center text-5xl sm:text-6xl font-light text-cpRed group-hover:text-cpYellow group-hover:scale-110 transition-all shadow-[0_0_20px_rgba(255,0,60,0.35)]">
+                        +
+                    </div>
+
+                    <div class="mt-4 font-extrabold text-sm sm:text-base text-white group-hover:text-cpYellow tracking-wide uppercase">
+                        [ ДОБАВИТЬ КАЛЬКУЛЯТОР ПЕРСОНАЖА ]
+                    </div>
+                    <p class="text-xs text-cpMuted mt-1 max-w-xs">
+                        Нажмите «+», чтобы открыть новое окно расчета здоровья, брони и травм (можно добавить сколько угодно целей на поле боя)
+                    </p>
+                </button>
+            `;
+
+            grid.innerHTML = html;
+
+            // Инициализируем индикаторы половины здоровья и предпросмотра для всех карточек
+            characters.forEach(char => {
+                updateWoundStatusUI(char);
+                if (char.damageMenuOpen) {
+                    updateDamagePreviewUI(char);
+                }
+            });
+        }
+
+        /**
+         * Генерация HTML подменю "Нанесение урона"
+         */
+        function renderDamageSubmenuHTML(char) {
+            return `
+                <div class="p-3 bg-cpBlack border-2 border-cpYellow rounded shadow-[0_0_20px_rgba(252,238,10,0.18)] space-y-3">
+                    <div class="flex items-center justify-between border-b border-cpYellow/40 pb-1.5">
+                        <span class="text-xs font-black text-cpYellow uppercase tracking-wider">
+                            &gt;&gt; ПОДМЕНЮ: НАНЕСЕНИЕ УРОНА
+                        </span>
+                        <span class="text-[10px] font-mono text-cpRed bg-cpRed/10 px-1.5 py-0.5 rounded">БРОНЯ -1 ОС</span>
+                    </div>
+
+                    <!-- Поле ввода урона на реальных кубиках -->
+                    <div>
+                        <label for="dmg-input-${char.id}" class="block text-xs font-bold text-white mb-1">
+                            СКОЛЬКО УРОНА ВЫПАЛО НА РЕАЛЬНЫХ КУБИКАХ:
+                        </label>
+                        <input id="dmg-input-${char.id}" type="number" min="0"
+                            value="${char.dmgInput}"
+                            oninput="onDamageInputChange(${char.id}, this.value)"
+                            placeholder="Введите сумму на кубиках..."
+                            class="w-full bg-cpPanel border-2 border-cpRed focus:border-cpYellow focus:outline-none rounded px-3 py-2 text-lg font-black text-cpYellow placeholder-gray-600" />
+                    </div>
+
+                    <!-- ГАЛОЧКА 1: ТЯЖЕЛАЯ ТРАВМА? -->
+                    <div class="p-2.5 bg-cpPanel border border-cpGray rounded space-y-2">
+                        <label class="flex items-center gap-2.5 cursor-pointer select-none">
+                            <input type="checkbox" 
+                                ${char.heavyTraumaChecked ? 'checked' : ''}
+                                onchange="toggleHeavyTrauma(${char.id}, this.checked)"
+                                class="w-4 h-4 accent-cpRed rounded cursor-pointer" />
+                            <span class="text-xs font-extrabold text-cpRed uppercase">
+                                [!] ТЯЖЕЛАЯ ТРАВМА? (Случайная из Колоды травм)
+                            </span>
+                        </label>
+
+                        ${char.heavyTraumaChecked && !char.aimedShotChecked ? `
+                            <div class="pt-1 pl-6 space-y-1.5">
+                                <div class="text-[10px] text-gray-400">Выберите категорию травмы:</div>
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button type="button" onclick="setHeavyTraumaCategory(${char.id}, 'body')"
+                                        class="py-1.5 px-2 rounded text-xs font-bold border transition ${char.heavyTraumaCategory === 'body' ? 'bg-cpRed text-white border-white' : 'bg-cpBlack text-gray-400 border-cpGray hover:border-cpRed'}">
+                                        ТРАВМА ТЕЛА (#2D6 B)
+                                    </button>
+                                    <button type="button" onclick="setHeavyTraumaCategory(${char.id}, 'head')"
+                                        class="py-1.5 px-2 rounded text-xs font-bold border transition ${char.heavyTraumaCategory === 'head' ? 'bg-cpRed text-white border-white' : 'bg-cpBlack text-gray-400 border-cpGray hover:border-cpRed'}">
+                                        ТРАВМА ГОЛОВЫ (#2D6 H)
+                                    </button>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- ГАЛОЧКА 2: ПРИЦЕЛЬНЫЙ ВЫСТРЕЛ? -->
+                    <div class="p-2.5 bg-cpPanel border border-cpGray rounded space-y-2">
+                        <label class="flex items-center gap-2.5 cursor-pointer select-none">
+                            <input type="checkbox"
+                                ${char.aimedShotChecked ? 'checked' : ''}
+                                onchange="toggleAimedShot(${char.id}, this.checked)"
+                                class="w-4 h-4 accent-cpYellow rounded cursor-pointer" />
+                            <span class="text-xs font-extrabold text-cpYellow uppercase">
+                                [🎯] ПРИЦЕЛЬНЫЙ ВЫСТРЕЛ? (Руки / Ноги / Тело / Голова)
+                            </span>
+                        </label>
+
+                        ${char.aimedShotChecked ? `
+                            <div class="pt-1 space-y-2">
+                                <div class="text-[10px] text-gray-300">
+                                    Выберите зону попадания (дает случайную травму этой категории, а <strong class="text-cpYellow">Голова удваивает урон</strong>):
+                                </div>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                                    <button type="button" onclick="setAimedPart(${char.id}, 'arms')"
+                                        class="py-1.5 px-2 rounded text-xs font-bold border transition ${char.aimedPart === 'arms' ? 'bg-cpCyan text-cpBlack border-white font-black' : 'bg-cpBlack text-gray-300 border-cpGray hover:border-cpCyan'}">
+                                        💪 РУКИ
+                                    </button>
+                                    <button type="button" onclick="setAimedPart(${char.id}, 'legs')"
+                                        class="py-1.5 px-2 rounded text-xs font-bold border transition ${char.aimedPart === 'legs' ? 'bg-cpCyan text-cpBlack border-white font-black' : 'bg-cpBlack text-gray-300 border-cpGray hover:border-cpCyan'}">
+                                        🦵 НОГИ
+                                    </button>
+                                    <button type="button" onclick="setAimedPart(${char.id}, 'torso')"
+                                        class="py-1.5 px-2 rounded text-xs font-bold border transition ${char.aimedPart === 'torso' ? 'bg-cpCyan text-cpBlack border-white font-black' : 'bg-cpBlack text-gray-300 border-cpGray hover:border-cpCyan'}">
+                                        🫁 ТЕЛО
+                                    </button>
+                                    <button type="button" onclick="setAimedPart(${char.id}, 'head')"
+                                        class="py-1.5 px-2 rounded text-xs font-bold border transition ${char.aimedPart === 'head' ? 'bg-cpYellow text-cpBlack border-white font-black' : 'bg-cpBlack text-cpYellow border-cpYellow/50 hover:border-cpYellow'}">
+                                        💀 ГОЛОВА (x2)
+                                    </button>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- ПРЕДПРОСМОТР ВЫПАВШЕЙ СЛУЧАЙНОЙ ТРАВМЫ (ЕСЛИ ВКЛЮЧЕНА ГАЛОЧКА) -->
+                    ${char.pendingInjury ? `
+                        <div class="p-2.5 bg-red-950/50 border border-cpRed rounded text-xs space-y-1">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-[10px] font-bold text-cpYellow uppercase">
+                                    🎲 ВЫПАВШАЯ ТРАВМА (${char.pendingInjury.zoneLabel}):
+                                </span>
+                                <button type="button" onclick="rerollPendingInjury(${char.id})"
+                                    class="text-[10px] bg-cpBlack hover:bg-cpRed text-cpCyan hover:text-white border border-cpCyan/40 px-2 py-0.5 rounded transition">
+                                    [🎲 ПЕРЕБРОСИТЬ]
+                                </button>
+                            </div>
+                            <div class="font-black text-white text-sm flex items-center justify-between">
+                                <span>${char.pendingInjury.title}</span>
+                                <span class="text-cpRed font-mono text-xs">${char.pendingInjury.code}</span>
+                            </div>
+                            <ul class="list-disc list-inside text-[11px] text-gray-200 space-y-0.5">
+                                ${char.pendingInjury.symptoms.map(s => `<li>${s}</li>`).join('')}
+                            </ul>
+                            <div class="pt-1 flex flex-wrap gap-2 text-[10px] text-cpCyan">
+                                <span><strong>Быстрая помощь:</strong> ${char.pendingInjury.quickFix}</span>
+                                <span>|</span>
+                                <span><strong>Лечение:</strong> ${char.pendingInjury.treatment}</span>
+                            </div>
+                        </div>
+                    ` : ''}
+
+                    <!-- ЖИВОЙ ПРЕДПРОСМОТР РАСЧЕТА УРОНА И БРОНИ -->
+                    <div id="dmg-preview-box-${char.id}" class="p-2.5 bg-cpPanel border border-cpGray rounded"></div>
+
+                    <!-- КНОПКИ "ОК" И "ОТМЕНА" -->
+                    <div class="grid grid-cols-2 gap-2.5 pt-1">
+                        <button type="button" onclick="closeDamageSubmenu(${char.id})"
+                            class="py-2.5 px-3 rounded bg-cpPanel hover:bg-gray-800 text-gray-300 border border-cpGray font-bold text-xs uppercase tracking-wider transition">
+                            [ ОТМЕНА ]
+                        </button>
+                        <button type="button" onclick="applyDamageConfirm(${char.id})"
+                            class="py-2.5 px-3 rounded bg-cpGreen hover:bg-green-400 text-cpBlack font-black text-xs uppercase tracking-wider shadow-[0_0_12px_rgba(0,255,102,0.4)] transition">
+                            [ ОК // ПРИМЕНИТЬ ]
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * Отрисовка карточки полученной критической травмы в стиле "Колода травмы.pdf"
+         */
+        function renderInjuryCardItemHTML(charId, inj) {
+            return `
+                <div class="bg-cpBlack border-l-4 border-cpRed border border-cpGray rounded p-2.5 text-xs relative">
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="bg-cpRed text-white font-black text-[10px] px-1.5 py-0.5 rounded-sm">${inj.code}</span>
+                                <span class="text-[10px] text-cpYellow font-bold uppercase">[${inj.zoneLabel}]</span>
+                                <span class="font-black text-white text-xs sm:text-sm">${inj.title}</span>
+                            </div>
+                        </div>
+                        <button type="button" onclick="removeInjuryFromChar(${charId}, ${inj.instanceId})"
+                            class="text-[10px] text-cpGreen hover:underline shrink-0 bg-cpPanel border border-cpGreen/40 px-1.5 py-0.5 rounded"
+                            title="Вылечить / Убрать травму">
+                            [ВЫЛЕЧИТЬ]
+                        </button>
+                    </div>
+
+                    <!-- СИМПТОМЫ -->
+                    <div class="mt-1.5">
+                        <div class="text-[10px] font-bold text-cpRed uppercase tracking-wider">СИМПТОМЫ ::.::</div>
+                        <ul class="list-disc list-inside text-[11px] text-gray-200 mt-0.5 space-y-0.5">
+                            ${inj.symptoms.map(s => `<li>${s}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    <!-- МЕДОПЦИИ: БЫСТРАЯ ПОМОЩЬ И ЛЕЧЕНИЕ (как на графических плашках в PDF) -->
+                    <div class="mt-2 grid grid-cols-2 gap-2 pt-1.5 border-t border-cpGray/60 text-[10px]">
+                        <div class="cp-chamfer bg-cpPanel border border-cpRed/60 p-1.5">
+                            <div class="text-cpMuted uppercase font-bold">Быстрая помощь:</div>
+                            <div class="font-extrabold ${inj.quickFix === 'НЕТ' ? 'text-cpRed' : 'text-white'} mt-0.5">${inj.quickFix}</div>
+                        </div>
+                        <div class="cp-chamfer bg-cpPanel border border-cpCyan/60 p-1.5">
+                            <div class="text-cpMuted uppercase font-bold">Лечение:</div>
+                            <div class="font-extrabold text-cpCyan mt-0.5">${inj.treatment}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * ============================================================================
+         * СПРАВОЧНИК КОЛОДЫ ТРАВМ (МОДАЛЬНОЕ ОКНО)
+         * ============================================================================
+         */
+        function openDeckModal() {
+            const modal = document.getElementById('deckModal');
+            if (!modal) return;
+            modal.classList.remove('hidden');
+            filterDeckModal('all');
+        }
+
+        function closeDeckModal() {
+            const modal = document.getElementById('deckModal');
+            if (!modal) return;
+            modal.classList.add('hidden');
+        }
+
+        function filterDeckModal(filterType) {
+            const container = document.getElementById('deckModalContent');
+            if (!container) return;
+
+            // Обновляем активную кнопку фильтра
+            document.querySelectorAll('.deck-filter-btn').forEach(btn => {
+                if (btn.getAttribute('data-filter') === filterType) {
+                    btn.className = 'deck-filter-btn bg-cpRed text-white text-xs font-bold px-2.5 py-1.5 rounded';
+                } else {
+                    btn.className = 'deck-filter-btn bg-cpPanel text-gray-300 border border-cpGray text-xs font-bold px-2.5 py-1.5 rounded hover:border-cpRed';
+                }
+            });
+
+            let list = [];
+            if (filterType === 'all') {
+                list = [...TRAUMA_DECK.body, ...TRAUMA_DECK.head];
+            } else if (filterType === 'body') {
+                list = TRAUMA_DECK.body;
+            } else if (filterType === 'head') {
+                list = TRAUMA_DECK.head;
+            } else {
+                list = TRAUMA_DECK.body.filter(item => item.zones.includes(filterType));
+            }
+
+            container.innerHTML = list.map(inj => `
+                <div class="bg-cpCard border border-cpRed/70 rounded p-3 flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center justify-between gap-2 border-b border-cpGray pb-1.5 mb-2">
+                            <span class="bg-cpRed text-white font-black text-xs px-2 py-0.5 rounded-sm">${inj.code}</span>
+                            <span class="text-xs font-bold text-cpYellow">${inj.zoneLabel}</span>
+                        </div>
+                        <h3 class="text-base font-black text-white mb-1.5">${inj.title}</h3>
+                        <div class="text-[10px] font-bold text-cpRed uppercase">СИМПТОМЫ ::.::</div>
+                        <ul class="list-disc list-inside text-xs text-gray-200 space-y-1 mt-1 mb-3">
+                            ${inj.symptoms.map(s => `<li>${s}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    <div>
+                        <div class="bg-cpRed text-cpBlack font-black text-[10px] px-2 py-0.5 tracking-widest mb-1.5 flex justify-between">
+                            <span>МЕДОПЦИИ</span>
+                            <span>: . . : : ! : . I</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div class="cp-chamfer bg-cpBlack border border-cpRed p-2">
+                                <div class="text-[10px] text-gray-400">Быстрая помощь</div>
+                                <div class="font-extrabold ${inj.quickFix === 'НЕТ' ? 'text-cpRed' : 'text-white'} mt-0.5">${inj.quickFix}</div>
+                            </div>
+                            <div class="cp-chamfer bg-cpBlack border border-cpCyan p-2">
+                                <div class="text-[10px] text-gray-400">Лечение</div>
+                                <div class="font-extrabold text-cpCyan mt-0.5">${inj.treatment}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        /**
+         * Вспомогательные функции интерфейса
+         */
+        function toggleCRT() {
+            crtEnabled = !crtEnabled;
+            const btn = document.getElementById('crtToggleBtn');
+            if (crtEnabled) {
+                document.body.classList.remove('crt-disabled');
+                if (btn) btn.textContent = '[CRT: ВКЛ]';
+            } else {
+                document.body.classList.add('crt-disabled');
+                if (btn) btn.textContent = '[CRT: ВЫКЛ]';
+            }
+        }
+
+        function requestClearAll() {
+            const bar = document.getElementById('clearConfirmBar');
+            if (bar) bar.classList.remove('hidden');
+        }
+
+        function cancelClearAll() {
+            const bar = document.getElementById('clearConfirmBar');
+            if (bar) bar.classList.add('hidden');
+        }
+
+        function confirmClearAll() {
+            characters = [];
+            cancelClearAll();
+            renderAllCards();
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // Закрытие модального окна по клавише Escape
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeDeckModal();
+            }
+        });
+
+        // Инициализация при загрузке: поле калькулятора изначально пустое, отображается большая кнопка "+"
+        window.onload = function () {
+            renderAllCards();
+        };
+    </script>
+</body>
+</html>
